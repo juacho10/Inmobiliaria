@@ -1,0 +1,333 @@
+@model Inmobiliaria.Models.Contrato
+
+@{
+    ViewData["Title"] = "Crear Contrato";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Contratos">Contratos</a></li>
+                    <li class="breadcrumb-item active">Crear Nuevo Contrato</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">📄 Crear Nuevo Contrato de Alquiler</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" id="contratoForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <!-- Selección de Inmueble -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="InmuebleId" class="form-label fw-bold">🏠 Inmueble *</label>
+                                    <select asp-for="InmuebleId" class="form-select" id="inmuebleSelect" required>
+                                        <option value="">Seleccionar Inmueble</option>
+                                        @foreach (var inmueble in ViewBag.Inmuebles as List<Inmueble>)
+                                        {
+                                            <option value="@inmueble.Id" 
+                                                    data-precio="@inmueble.Precio"
+                                                    data-disponible="@inmueble.Disponible">
+                                                @inmueble.Direccion - $@inmueble.Precio
+                                            </option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="InmuebleId" class="text-danger small"></span>
+                                    <div class="form-text">Solo se muestran inmuebles disponibles</div>
+                                </div>
+                            </div>
+
+                            <!-- Selección de Inquilino -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="InquilinoId" class="form-label fw-bold">👤 Inquilino *</label>
+                                    <select asp-for="InquilinoId" class="form-select" required>
+                                        <option value="">Seleccionar Inquilino</option>
+                                        @foreach (var inquilino in ViewBag.Inquilinos as List<Inquilino>)
+                                        {
+                                            <option value="@inquilino.Id">@inquilino.NombreCompleto - @inquilino.Dni</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="InquilinoId" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Fecha de Inicio -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaInicio" class="form-label fw-bold">📅 Fecha de Inicio *</label>
+                                    <input asp-for="FechaInicio" type="date" class="form-control" 
+                                           min="@DateTime.Today.ToString("yyyy-MM-dd")" 
+                                           id="fechaInicio" required />
+                                    <span asp-validation-for="FechaInicio" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de Fin -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaFin" class="form-label fw-bold">📅 Fecha de Fin *</label>
+                                    <input asp-for="FechaFin" type="date" class="form-control" 
+                                           id="fechaFin" required />
+                                    <span asp-validation-for="FechaFin" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monto del Contrato -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Monto" class="form-label fw-bold">💰 Monto Mensual *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="Monto" type="number" class="form-control" 
+                                               step="0.01" min="1" id="montoInput" required />
+                                    </div>
+                                    <span asp-validation-for="Monto" class="text-danger small"></span>
+                                    <div class="form-text">
+                                        Precio sugerido: <span id="precioSugerido" class="fw-bold">$0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información de Duración -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">⏱️ Duración del Contrato</label>
+                                    <div class="alert alert-info py-2">
+                                        <div id="duracionInfo">Seleccione las fechas para calcular la duración</div>
+                                        <div id="montoTotalInfo" class="fw-bold mt-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validación de Disponibilidad -->
+                        <div id="disponibilidadAlert" class="alert alert-warning d-none">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Verificando disponibilidad...</strong>
+                            <div id="disponibilidadMessage"></div>
+                        </div>
+
+                        <div class="form-group form-check mb-3">
+                            <input asp-for="Vigente" class="form-check-input" checked />
+                            <label asp-for="Vigente" class="form-check-label fw-bold">
+                                Contrato Vigente
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> Crear Contrato
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Información -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">💡 Información del Contrato</h5>
+                </div>
+                <div class="card-body">
+                    <h6>📋 Requisitos:</h6>
+                    <ul class="small">
+                        <li>El inmueble debe estar disponible</li>
+                        <li>Las fechas no deben superponerse con otros contratos</li>
+                        <li>La fecha de fin debe ser posterior a la de inicio</li>
+                        <li>Mínimo 30 días de duración</li>
+                    </ul>
+
+                    <h6>⚡ Validaciones Automáticas:</h6>
+                    <ul class="small">
+                        <li>Disponibilidad del inmueble</li>
+                        <li>Superposición de fechas</li>
+                        <li>Duración mínima</li>
+                        <li>Monto adecuado</li>
+                    </ul>
+
+                    <div class="alert alert-warning small mt-3">
+                        <strong>Nota:</strong> El sistema verificará automáticamente la disponibilidad del inmueble en las fechas seleccionadas.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen del Contrato -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">📊 Resumen</h5>
+                </div>
+                <div class="card-body">
+                    <div id="resumenContrato" class="text-center">
+                        <p class="text-muted">Complete el formulario para ver el resumen</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inmuebleSelect = document.getElementById('inmuebleSelect');
+            const fechaInicio = document.getElementById('fechaInicio');
+            const fechaFin = document.getElementById('fechaFin');
+            const montoInput = document.getElementById('montoInput');
+            const precioSugerido = document.getElementById('precioSugerido');
+            const duracionInfo = document.getElementById('duracionInfo');
+            const montoTotalInfo = document.getElementById('montoTotalInfo');
+            const disponibilidadAlert = document.getElementById('disponibilidadAlert');
+            const disponibilidadMessage = document.getElementById('disponibilidadMessage');
+            const resumenContrato = document.getElementById('resumenContrato');
+
+            // Establecer fecha mínima para fechaFin (mañana)
+            fechaInicio.min = new Date().toISOString().split('T')[0];
+
+            // Cuando se selecciona un inmueble, cargar precio sugerido
+            inmuebleSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const precio = selectedOption.getAttribute('data-precio');
+                const disponible = selectedOption.getAttribute('data-disponible') === 'True';
+                
+                if (precio) {
+                    precioSugerido.textContent = '$' + parseFloat(precio).toLocaleString('es-AR');
+                    montoInput.value = precio;
+                    
+                    if (!disponible) {
+                        disponibilidadAlert.classList.remove('d-none');
+                        disponibilidadMessage.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Este inmueble no está disponible para alquiler.';
+                    } else {
+                        disponibilidadAlert.classList.add('d-none');
+                    }
+                } else {
+                    precioSugerido.textContent = '$0';
+                    montoInput.value = '';
+                }
+                actualizarResumen();
+            });
+
+            // Calcular duración cuando cambian las fechas
+            function calcularDuracion() {
+                if (fechaInicio.value && fechaFin.value) {
+                    const inicio = new Date(fechaInicio.value);
+                    const fin = new Date(fechaFin.value);
+                    
+                    if (fin > inicio) {
+                        const diffTime = Math.abs(fin - inicio);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const diffMeses = Math.ceil(diffDays / 30);
+                        
+                        duracionInfo.textContent = `${diffDays} días (${diffMeses} meses)`;
+                        
+                        // Calcular monto total
+                        const monto = parseFloat(montoInput.value) || 0;
+                        const montoTotal = monto * diffMeses;
+                        montoTotalInfo.textContent = `Monto total: $${montoTotal.toLocaleString('es-AR')}`;
+                        
+                        // Validar duración mínima
+                        if (diffDays < 30) {
+                            duracionInfo.innerHTML += ' <span class="badge bg-warning">Duración mínima: 30 días</span>';
+                        }
+                    } else {
+                        duracionInfo.textContent = 'La fecha de fin debe ser posterior a la de inicio';
+                        montoTotalInfo.textContent = '';
+                    }
+                } else {
+                    duracionInfo.textContent = 'Seleccione las fechas para calcular la duración';
+                    montoTotalInfo.textContent = '';
+                }
+                actualizarResumen();
+            }
+
+            fechaInicio.addEventListener('change', function() {
+                if (this.value) {
+                    const minFin = new Date(this.value);
+                    minFin.setDate(minFin.getDate() + 1);
+                    fechaFin.min = minFin.toISOString().split('T')[0];
+                }
+                calcularDuracion();
+            });
+
+            fechaFin.addEventListener('change', calcularDuracion);
+            montoInput.addEventListener('input', calcularDuracion);
+
+            // Actualizar resumen del contrato
+            function actualizarResumen() {
+                const inmuebleText = inmuebleSelect.options[inmuebleSelect.selectedIndex]?.text || 'No seleccionado';
+                const inquilinoSelect = document.querySelector('select[name="InquilinoId"]');
+                const inquilinoText = inquilinoSelect?.options[inquilinoSelect.selectedIndex]?.text || 'No seleccionado';
+                const monto = montoInput.value ? `$${parseFloat(montoInput.value).toLocaleString('es-AR')}` : '$0';
+                
+                let html = `
+                    <div class="text-start">
+                        <p><strong>Inmueble:</strong><br><small>${inmuebleText}</small></p>
+                        <p><strong>Inquilino:</strong><br><small>${inquilinoText}</small></p>
+                        <p><strong>Monto Mensual:</strong><br><small>${monto}</small></p>
+                `;
+                
+                if (fechaInicio.value && fechaFin.value) {
+                    const inicio = new Date(fechaInicio.value).toLocaleDateString('es-AR');
+                    const fin = new Date(fechaFin.value).toLocaleDateString('es-AR');
+                    html += `
+                        <p><strong>Período:</strong><br><small>${inicio} al ${fin}</small></p>
+                    `;
+                }
+                
+                html += `</div>`;
+                resumenContrato.innerHTML = html;
+            }
+
+            // Validación antes de enviar el formulario
+            document.getElementById('contratoForm').addEventListener('submit', function(e) {
+                const inicio = new Date(fechaInicio.value);
+                const fin = new Date(fechaFin.value);
+                
+                if (fin <= inicio) {
+                    e.preventDefault();
+                    alert('❌ La fecha de fin debe ser posterior a la fecha de inicio.');
+                    return;
+                }
+                
+                const diffTime = Math.abs(fin - inicio);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 30) {
+                    e.preventDefault();
+                    alert('❌ La duración mínima del contrato es de 30 días.');
+                    return;
+                }
+                
+                if (!inmuebleSelect.value) {
+                    e.preventDefault();
+                    alert('❌ Debe seleccionar un inmueble.');
+                    return;
+                }
+            });
+
+            // Inicializar resumen
+            actualizarResumen();
+        });
+    </script>
+}

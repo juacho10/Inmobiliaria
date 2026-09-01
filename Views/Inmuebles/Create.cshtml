@@ -1,0 +1,128 @@
+@model Inmobiliaria.Models.Inmueble
+
+@{
+    ViewData["Title"] = ViewData["Title"] = "Crear Inmueble";
+}
+
+<h1>🏠 Crear Nuevo Inmueble</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Direccion" class="form-label">Dirección *</label>
+                        <input asp-for="Direccion" class="form-control" />
+                        <span asp-validation-for="Direccion" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="PropietarioId" class="form-label">Propietario *</label>
+                        <select asp-for="PropietarioId" class="form-select" asp-items="@(new SelectList(ViewBag.Propietarios, "Id", "NombreCompleto"))">
+                            <option value="">Seleccionar Propietario</option>
+                        </select>
+                        <span asp-validation-for="PropietarioId" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Tipo" class="form-label">Tipo *</label>
+                        <select asp-for="Tipo" class="form-select">
+                            <option value="">Seleccionar Tipo</option>
+                            <option value="Casa">Casa</option>
+                            <option value="Departamento">Departamento</option>
+                            <option value="Local">Local Comercial</option>
+                            <option value="Depósito">Depósito</option>
+                            <option value="Oficina">Oficina</option>
+                            <option value="PH">PH</option>
+                        </select>
+                        <span asp-validation-for="Tipo" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Uso" class="form-label">Uso *</label>
+                        <select asp-for="Uso" class="form-select">
+                            <option value="">Seleccionar Uso</option>
+                            <option value="Residencial">Residencial</option>
+                            <option value="Comercial">Comercial</option>
+                        </select>
+                        <span asp-validation-for="Uso" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Ambientes" class="form-label">Ambientes *</label>
+                        <input asp-for="Ambientes" class="form-control" type="number" min="1" max="50" />
+                        <span asp-validation-for="Ambientes" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Precio" class="form-label">Precio Mensual *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input asp-for="Precio" class="form-control" type="number" step="0.01" min="1" />
+                        </div>
+                        <span asp-validation-for="Precio" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Coordenadas" class="form-label">Coordenadas (opcional)</label>
+                        <input asp-for="Coordenadas" class="form-control" placeholder="Ej: -34.6037, -58.3816" />
+                        <span asp-validation-for="Coordenadas" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group form-check mb-3">
+                <input asp-for="Disponible" class="form-check-input" />
+                <label asp-for="Disponible" class="form-check-label">Disponible para alquiler</label>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">💾 Crear Inmueble</button>
+                <a asp-action="Index" class="btn btn-secondary">↩️ Cancelar</a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">💡 Información</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Campos obligatorios:</strong></p>
+                <ul>
+                    <li>Dirección</li>
+                    <li>Propietario</li>
+                    <li>Tipo</li>
+                    <li>Uso</li>
+                    <li>Ambientes</li>
+                    <li>Precio</li>
+                </ul>
+                <hr>
+                <p class="small text-muted">
+                    <strong>Nota:</strong> Los inmuebles marcados como no disponibles no aparecerán en las búsquedas para nuevos contratos.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

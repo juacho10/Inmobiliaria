@@ -1,0 +1,156 @@
+@model Inmobiliaria.Models.Inmueble
+
+@{
+    ViewData["Title"] = "Detalles del Inmueble";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">🏠 Detalles del Inmueble</h2>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">ID:</dt>
+                        <dd class="col-sm-8">@Model.Id</dd>
+
+                        <dt class="col-sm-4">Dirección:</dt>
+                        <dd class="col-sm-8">@Model.Direccion</dd>
+
+                        <dt class="col-sm-4">Tipo:</dt>
+                        <dd class="col-sm-8">@Model.Tipo</dd>
+
+                        <dt class="col-sm-4">Uso:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.Uso == "Comercial" ? "bg-info" : "bg-success")">
+                                @Model.Uso
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Ambientes:</dt>
+                        <dd class="col-sm-8">@Model.Ambientes</dd>
+
+                        <dt class="col-sm-4">Precio:</dt>
+                        <dd class="col-sm-8">$@Model.Precio</dd>
+
+                        <dt class="col-sm-4">Coordenadas:</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Model.Coordenadas))
+                            {
+                                @Model.Coordenadas
+                            }
+                            else
+                            {
+                                <span class="text-muted">No especificadas</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Propietario:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Propietario != null)
+                            {
+                                <div>
+                                    <strong>@Model.Propietario.NombreCompleto</strong><br>
+                                    <small class="text-muted">
+                                        DNI: @Model.Propietario.Dni<br>
+                                        Tel: @Model.Propietario.Telefono<br>
+                                        Email: @Model.Propietario.Email
+                                    </small>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No asignado</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Disponible)
+                            {
+                                <span class="badge bg-success">Disponible</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No Disponible</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Activo:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Activo)
+                            {
+                                <span class="badge bg-success">Sí</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">No</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Fecha Creación:</dt>
+                        <dd class="col-sm-8">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                        @if (Model.FechaModificacion.HasValue)
+                        {
+                            <dt class="col-sm-4">Última Modificación:</dt>
+                            <dd class="col-sm-8">@Model.FechaModificacion.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                        }
+                    </dl>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group" role="group">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">✏️ Editar</a>
+                        <a asp-action="Index" class="btn btn-secondary">📋 Volver al Listado</a>
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">🗑️ Eliminar</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">📊 Información Rápida</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-home fa-3x text-primary"></i>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Tipo:</strong> @Model.Tipo
+                    </div>
+                    <div class="mb-2">
+                        <strong>Uso:</strong> @Model.Uso
+                    </div>
+                    <div class="mb-2">
+                        <strong>Ambientes:</strong> @Model.Ambientes
+                    </div>
+                    <div class="mb-2">
+                        <strong>Precio:</strong> $@Model.Precio
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        @if (Model.Disponible)
+                        {
+                            <span class="badge bg-success p-2">✅ DISPONIBLE</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary p-2">❌ NO DISPONIBLE</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+}

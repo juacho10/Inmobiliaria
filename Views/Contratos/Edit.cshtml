@@ -1,0 +1,566 @@
+@model Inmobiliaria.Models.Contrato
+
+@{
+    ViewData["Title"] = "Editar Contrato";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Contratos">Contratos</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">Contrato #@Model.Id</a></li>
+                    <li class="breadcrumb-item active">Editar Contrato</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-edit"></i> Editar Contrato #@Model.Id
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" id="contratoForm">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="FechaCreacion" />
+                        <input type="hidden" asp-for="InmuebleId" />
+                        <input type="hidden" asp-for="InquilinoId" />
+                        <input type="hidden" asp-for="UsuarioCreacionId" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Información Inmutable -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-lock"></i> Información No Modificable
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>🏠 Inmueble:</strong><br>
+                                        @if (Model.Inmueble != null)
+                                        {
+                                            <span class="text-muted">@Model.Inmueble.Direccion</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">No asignado</span>
+                                        }
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>👤 Inquilino:</strong><br>
+                                        @if (Model.Inquilino != null)
+                                        {
+                                            <span class="text-muted">@Model.Inquilino.NombreCompleto</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger">No asignado</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Fecha de Inicio -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaInicio" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-plus"></i> Fecha de Inicio *
+                                    </label>
+                                    <input asp-for="FechaInicio" type="date" class="form-control" 
+                                           id="fechaInicio" required />
+                                    <span asp-validation-for="FechaInicio" class="text-danger small"></span>
+                                    <div class="form-text">Fecha de inicio del contrato</div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de Fin -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaFin" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-minus"></i> Fecha de Fin *
+                                    </label>
+                                    <input asp-for="FechaFin" type="date" class="form-control" 
+                                           id="fechaFin" required />
+                                    <span asp-validation-for="FechaFin" class="text-danger small"></span>
+                                    <div class="form-text">Fecha de finalización del contrato</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Monto del Contrato -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Monto" class="form-label fw-bold">
+                                        <i class="fas fa-dollar-sign"></i> Monto Mensual *
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="Monto" type="number" class="form-control" 
+                                               step="0.01" min="1" id="montoInput" required />
+                                    </div>
+                                    <span asp-validation-for="Monto" class="text-danger small"></span>
+                                    <div class="form-text">Monto de alquiler mensual</div>
+                                </div>
+                            </div>
+
+                            <!-- Estado del Contrato -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-toggle-on"></i> Estado del Contrato
+                                    </label>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="form-check form-switch">
+                                                <input asp-for="Vigente" class="form-check-input" type="checkbox" role="switch" id="vigenteSwitch">
+                                                <label class="form-check-label fw-bold" for="vigenteSwitch">
+                                                    Contrato Vigente
+                                                </label>
+                                            </div>
+                                            <div class="mt-2 small text-muted" id="estadoContratoInfo">
+                                                @if (Model.Vigente)
+                                                {
+                                                    <span class="badge bg-success">ACTUALMENTE VIGENTE</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">FINALIZADO</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Duración -->
+                        <div class="card bg-info text-white mb-4">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-calculator"></i> Información de Duración
+                                </h6>
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <strong>Duración Total</strong><br>
+                                        <span id="duracionTotal">Calculando...</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Meses</strong><br>
+                                        <span id="totalMeses">0</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong>Monto Total</strong><br>
+                                        <span id="montoTotal">$0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terminación Anticipada -->
+                        <div class="card border-warning mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-exclamation-triangle"></i> Terminación Anticipada
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="FechaTerminacionAnticipada" class="form-label fw-bold">
+                                                Fecha de Terminación
+                                            </label>
+                                            <input asp-for="FechaTerminacionAnticipada" type="date" class="form-control" 
+                                                   id="fechaTerminacion" />
+                                            <span asp-validation-for="FechaTerminacionAnticipada" class="text-danger small"></span>
+                                            <div class="form-text">Fecha real de terminación (si aplica)</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label asp-for="Multa" class="form-label fw-bold">
+                                                Multa por Terminación
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input asp-for="Multa" type="number" class="form-control" 
+                                                       step="0.01" min="0" id="multaInput" />
+                                            </div>
+                                            <span asp-validation-for="Multa" class="text-danger small"></span>
+                                            <div class="form-text">Monto de multa aplicada</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info small">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Información:</strong> La terminación anticipada genera multas según el tiempo incumplido del contrato.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Auditoría -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-history"></i> Información de Auditoría
+                                </h6>
+                                <div class="row small text-muted">
+                                    <div class="col-md-4">
+                                        <strong>Creado:</strong><br>
+                                        @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                    @if (Model.FechaModificacion.HasValue)
+                                    {
+                                        <div class="col-md-4">
+                                            <strong>Modificado:</strong><br>
+                                            @Model.FechaModificacion.Value.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                    }
+                                    @if (Model.UsuarioCreacionId.HasValue)
+                                    {
+                                        <div class="col-md-4">
+                                            <strong>Creado por:</strong><br>
+                                            Usuario #@Model.UsuarioCreacionId
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validación de Disponibilidad -->
+                        <div id="disponibilidadAlert" class="alert alert-warning mt-3 d-none">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                            <strong>Verificando disponibilidad del inmueble...</strong>
+                            <div id="disponibilidadMessage"></div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <a asp-action="Index" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-list"></i> Volver al Listado
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Información -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Información Actual
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row small">
+                        <dt class="col-sm-5">Inmueble:</dt>
+                        <dd class="col-sm-7">@(Model.Inmueble?.Direccion ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Inquilino:</dt>
+                        <dd class="col-sm-7">@(Model.Inquilino?.NombreCompleto ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Fecha Inicio:</dt>
+                        <dd class="col-sm-7">@Model.FechaInicio.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-5">Fecha Fin:</dt>
+                        <dd class="col-sm-7">@Model.FechaFin.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-5">Monto Actual:</dt>
+                        <dd class="col-sm-7">$@Model.Monto.ToString("0.00")</dd>
+
+                        <dt class="col-sm-5">Estado:</dt>
+                        <dd class="col-sm-7">
+                            @if (Model.Vigente)
+                            {
+                                <span class="badge bg-success">Vigente</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Finalizado</span>
+                            }
+                        </dd>
+
+                        @if (Model.FechaTerminacionAnticipada.HasValue)
+                        {
+                            <dt class="col-sm-5">Terminación:</dt>
+                            <dd class="col-sm-7">@Model.FechaTerminacionAnticipada.Value.ToString("dd/MM/yyyy")</dd>
+                        }
+
+                        @if (Model.Multa.HasValue)
+                        {
+                            <dt class="col-sm-5">Multa:</dt>
+                            <dd class="col-sm-7">$@Model.Multa.Value.ToString("0.00")</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Resumen de Cambios -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exchange-alt"></i> Resumen de Cambios
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="resumenCambios" class="small">
+                        <p class="text-muted">Los cambios se mostrarán aquí...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advertencias Importantes -->
+            <div class="card mt-3 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Advertencias
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning small">
+                        <strong>Importante:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Los cambios en fechas afectan pagos existentes</li>
+                            <li>La modificación de montos impacta en reportes</li>
+                            <li>Se verificará la disponibilidad del inmueble</li>
+                            <li>Los cambios se registrarán en el historial</li>
+                        </ul>
+                    </div>
+
+                    <!-- Información de Pagos -->
+                    @if (ViewBag.TienePagosActivos == true)
+                    {
+                        <div class="alert alert-info small mt-2">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <strong>Pagos registrados:</strong> Este contrato tiene pagos asociados.
+                            <div class="mt-1">
+                                <a href="@Url.Action("Index", "Pagos", new { contratoId = Model.Id })" 
+                                   class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-eye"></i> Ver Pagos
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del formulario
+            const fechaInicio = document.getElementById('fechaInicio');
+            const fechaFin = document.getElementById('fechaFin');
+            const montoInput = document.getElementById('montoInput');
+            const vigenteSwitch = document.getElementById('vigenteSwitch');
+            const fechaTerminacion = document.getElementById('fechaTerminacion');
+            const multaInput = document.getElementById('multaInput');
+            const duracionTotal = document.getElementById('duracionTotal');
+            const totalMeses = document.getElementById('totalMeses');
+            const montoTotal = document.getElementById('montoTotal');
+            const resumenCambios = document.getElementById('resumenCambios');
+            const estadoContratoInfo = document.getElementById('estadoContratoInfo');
+
+            // Valores originales
+            const valoresOriginales = {
+                fechaInicio: fechaInicio.value,
+                fechaFin: fechaFin.value,
+                monto: montoInput.value,
+                vigente: vigenteSwitch.checked,
+                fechaTerminacion: fechaTerminacion.value,
+                multa: multaInput.value
+            };
+
+            // Calcular duración y montos
+            function calcularDuracionYMonto() {
+                if (fechaInicio.value && fechaFin.value) {
+                    const inicio = new Date(fechaInicio.value);
+                    const fin = new Date(fechaFin.value);
+                    
+                    if (fin > inicio) {
+                        const diffTime = Math.abs(fin - inicio);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const diffMeses = Math.ceil(diffDays / 30);
+                        
+                        duracionTotal.textContent = `${diffDays} días`;
+                        totalMeses.textContent = diffMeses;
+                        
+                        // Calcular monto total
+                        const monto = parseFloat(montoInput.value) || 0;
+                        const montoTotalCalculado = monto * diffMeses;
+                        montoTotal.textContent = `$${montoTotalCalculado.toLocaleString('es-AR')}`;
+                        
+                        return { dias: diffDays, meses: diffMeses };
+                    }
+                }
+                return { dias: 0, meses: 0 };
+            }
+
+            // Actualizar estado del contrato
+            function actualizarEstadoContrato() {
+                if (vigenteSwitch.checked) {
+                    estadoContratoInfo.innerHTML = '<span class="badge bg-success">VIGENTE</span>';
+                } else {
+                    estadoContratoInfo.innerHTML = '<span class="badge bg-secondary">FINALIZADO</span>';
+                }
+            }
+
+            // Actualizar resumen de cambios
+            function actualizarResumenCambios() {
+                let cambios = [];
+
+                if (fechaInicio.value !== valoresOriginales.fechaInicio) {
+                    const original = new Date(valoresOriginales.fechaInicio).toLocaleDateString('es-AR');
+                    const nuevo = new Date(fechaInicio.value).toLocaleDateString('es-AR');
+                    cambios.push(`<strong>Fecha Inicio:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (fechaFin.value !== valoresOriginales.fechaFin) {
+                    const original = new Date(valoresOriginales.fechaFin).toLocaleDateString('es-AR');
+                    const nuevo = new Date(fechaFin.value).toLocaleDateString('es-AR');
+                    cambios.push(`<strong>Fecha Fin:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (montoInput.value !== valoresOriginales.monto) {
+                    const original = `$${parseFloat(valoresOriginales.monto).toLocaleString('es-AR')}`;
+                    const nuevo = `$${parseFloat(montoInput.value).toLocaleString('es-AR')}`;
+                    cambios.push(`<strong>Monto:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (vigenteSwitch.checked !== valoresOriginales.vigente) {
+                    const original = valoresOriginales.vigente ? 'Vigente' : 'No Vigente';
+                    const nuevo = vigenteSwitch.checked ? 'Vigente' : 'No Vigente';
+                    cambios.push(`<strong>Estado:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (fechaTerminacion.value !== valoresOriginales.fechaTerminacion) {
+                    const original = valoresOriginales.fechaTerminacion ? 
+                        new Date(valoresOriginales.fechaTerminacion).toLocaleDateString('es-AR') : 'No especificada';
+                    const nuevo = fechaTerminacion.value ? 
+                        new Date(fechaTerminacion.value).toLocaleDateString('es-AR') : 'No especificada';
+                    cambios.push(`<strong>Terminación:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (multaInput.value !== valoresOriginales.multa) {
+                    const original = valoresOriginales.multa ? `$${parseFloat(valoresOriginales.multa).toLocaleString('es-AR')}` : '$0';
+                    const nuevo = multaInput.value ? `$${parseFloat(multaInput.value).toLocaleString('es-AR')}` : '$0';
+                    cambios.push(`<strong>Multa:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (cambios.length > 0) {
+                    let html = '<strong>Cambios detectados:</strong><ul class="mt-2 mb-0">';
+                    cambios.forEach(cambio => {
+                        html += `<li>${cambio}</li>`;
+                    });
+                    html += '</ul>';
+                    resumenCambios.innerHTML = html;
+                } else {
+                    resumenCambios.innerHTML = '<p class="text-muted mb-0">No se detectaron cambios</p>';
+                }
+            }
+
+            // Event listeners
+            fechaInicio.addEventListener('change', function() {
+                if (this.value && fechaFin.value) {
+                    const inicio = new Date(this.value);
+                    const fin = new Date(fechaFin.value);
+                    if (fin <= inicio) {
+                        // Ajustar fecha fin automáticamente
+                        const nuevaFin = new Date(inicio);
+                        nuevaFin.setMonth(nuevaFin.getMonth() + 1);
+                        fechaFin.value = nuevaFin.toISOString().split('T')[0];
+                    }
+                }
+                calcularDuracionYMonto();
+                actualizarResumenCambios();
+            });
+
+            fechaFin.addEventListener('change', function() {
+                calcularDuracionYMonto();
+                actualizarResumenCambios();
+            });
+
+            montoInput.addEventListener('input', function() {
+                calcularDuracionYMonto();
+                actualizarResumenCambios();
+            });
+
+            vigenteSwitch.addEventListener('change', function() {
+                actualizarEstadoContrato();
+                actualizarResumenCambios();
+            });
+
+            fechaTerminacion.addEventListener('change', actualizarResumenCambios);
+            multaInput.addEventListener('input', actualizarResumenCambios);
+
+            // Validación antes de enviar
+            document.getElementById('contratoForm').addEventListener('submit', function(e) {
+                const inicio = new Date(fechaInicio.value);
+                const fin = new Date(fechaFin.value);
+                
+                if (fin <= inicio) {
+                    e.preventDefault();
+                    alert('❌ La fecha de fin debe ser posterior a la fecha de inicio.');
+                    return;
+                }
+                
+                const { dias } = calcularDuracionYMonto();
+                
+                if (dias < 30) {
+                    e.preventDefault();
+                    alert('❌ La duración mínima del contrato es de 30 días.');
+                    return;
+                }
+
+                // Validar fecha de terminación
+                if (fechaTerminacion.value) {
+                    const terminacion = new Date(fechaTerminacion.value);
+                    if (terminacion < inicio || terminacion > fin) {
+                        e.preventDefault();
+                        alert('❌ La fecha de terminación debe estar dentro del período del contrato.');
+                        return;
+                    }
+                }
+
+                // Confirmar si hay cambios importantes
+                const hayCambiosImportantes = 
+                    fechaInicio.value !== valoresOriginales.fechaInicio ||
+                    fechaFin.value !== valoresOriginales.fechaFin ||
+                    montoInput.value !== valoresOriginales.monto;
+
+                if (hayCambiosImportantes) {
+                    const confirmar = confirm('⚠️ Está a punto de modificar información importante del contrato. ¿Desea continuar?');
+                    if (!confirmar) {
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            // Inicializar
+            calcularDuracionYMonto();
+            actualizarEstadoContrato();
+            actualizarResumenCambios();
+        });
+    </script>
+}

@@ -1,0 +1,469 @@
+@model Inmobiliaria.Models.Inmueble
+
+@{
+    ViewData["Title"] = "Editar Inmueble";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Inmuebles">Inmuebles</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Direccion</a></li>
+                    <li class="breadcrumb-item active">Editar Inmueble</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-edit"></i> Editar Inmueble #@Model.Id
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" id="inmuebleForm">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="FechaCreacion" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <!-- Dirección -->
+                            <div class="col-md-12">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Direccion" class="form-label fw-bold">
+                                        <i class="fas fa-map-marker-alt"></i> Dirección *
+                                    </label>
+                                    <input asp-for="Direccion" class="form-control" placeholder="Ingrese la dirección completa..." />
+                                    <span asp-validation-for="Direccion" class="text-danger small"></span>
+                                    <div class="form-text">Dirección completa del inmueble</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Propietario -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="PropietarioId" class="form-label fw-bold">
+                                        <i class="fas fa-user-tie"></i> Propietario *
+                                    </label>
+                                    <select asp-for="PropietarioId" class="form-select" required>
+                                        <option value="">Seleccionar Propietario</option>
+                                        @foreach (var propietario in ViewBag.Propietarios as List<Propietario>)
+                                        {
+                                            <option value="@propietario.Id" selected="@(propietario.Id == Model.PropietarioId)">
+                                                @propietario.NombreCompleto - @propietario.Dni
+                                            </option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="PropietarioId" class="text-danger small"></span>
+                                    <div class="form-text">Propietario responsable del inmueble</div>
+                                </div>
+                            </div>
+
+                            <!-- Tipo -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Tipo" class="form-label fw-bold">
+                                        <i class="fas fa-home"></i> Tipo de Inmueble *
+                                    </label>
+                                    <select asp-for="Tipo" class="form-select" required>
+                                        <option value="">Seleccionar Tipo</option>
+                                        <option value="Casa" selected="@(Model.Tipo == "Casa")">Casa</option>
+                                        <option value="Departamento" selected="@(Model.Tipo == "Departamento")">Departamento</option>
+                                        <option value="Local" selected="@(Model.Tipo == "Local")">Local Comercial</option>
+                                        <option value="Oficina" selected="@(Model.Tipo == "Oficina")">Oficina</option>
+                                        <option value="Depósito" selected="@(Model.Tipo == "Depósito")">Depósito</option>
+                                        <option value="PH" selected="@(Model.Tipo == "PH")">PH</option>
+                                        <option value="Terreno" selected="@(Model.Tipo == "Terreno")">Terreno</option>
+                                        <option value="Cabaña" selected="@(Model.Tipo == "Cabaña")">Cabaña</option>
+                                    </select>
+                                    <span asp-validation-for="Tipo" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Uso -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Uso" class="form-label fw-bold">
+                                        <i class="fas fa-building"></i> Uso *
+                                    </label>
+                                    <select asp-for="Uso" class="form-select" required>
+                                        <option value="">Seleccionar Uso</option>
+                                        <option value="Residencial" selected="@(Model.Uso == "Residencial")">Residencial</option>
+                                        <option value="Comercial" selected="@(Model.Uso == "Comercial")">Comercial</option>
+                                        <option value="Industrial" selected="@(Model.Uso == "Industrial")">Industrial</option>
+                                        <option value="Mixto" selected="@(Model.Uso == "Mixto")">Mixto</option>
+                                    </select>
+                                    <span asp-validation-for="Uso" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <!-- Ambientes -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Ambientes" class="form-label fw-bold">
+                                        <i class="fas fa-door-open"></i> Ambientes *
+                                    </label>
+                                    <input asp-for="Ambientes" type="number" class="form-control" min="1" max="50" />
+                                    <span asp-validation-for="Ambientes" class="text-danger small"></span>
+                                    <div class="form-text">Cantidad de ambientes</div>
+                                </div>
+                            </div>
+
+                            <!-- Precio -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Precio" class="form-label fw-bold">
+                                        <i class="fas fa-dollar-sign"></i> Precio Mensual *
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="Precio" type="number" class="form-control" step="0.01" min="1" />
+                                    </div>
+                                    <span asp-validation-for="Precio" class="text-danger small"></span>
+                                    <div class="form-text">Precio de alquiler mensual</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Coordenadas -->
+                            <div class="col-md-8">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Coordenadas" class="form-label fw-bold">
+                                        <i class="fas fa-map-pin"></i> Coordenadas (Opcional)
+                                    </label>
+                                    <input asp-for="Coordenadas" class="form-control" placeholder="Ej: -34.6037, -58.3816" />
+                                    <span asp-validation-for="Coordenadas" class="text-danger small"></span>
+                                    <div class="form-text">Coordenadas GPS para ubicación en mapas</div>
+                                </div>
+                            </div>
+
+                            <!-- Estado -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-toggle-on"></i> Estado del Inmueble
+                                    </label>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="form-check form-switch mb-2">
+                                                <input asp-for="Disponible" class="form-check-input" type="checkbox" role="switch" id="disponibleSwitch">
+                                                <label class="form-check-label fw-bold" for="disponibleSwitch">
+                                                    Disponible para Alquiler
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input asp-for="Activo" class="form-check-input" type="checkbox" role="switch" id="activoSwitch">
+                                                <label class="form-check-label fw-bold" for="activoSwitch">
+                                                    Inmueble Activo
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de Auditoría -->
+                        <div class="card bg-light mt-3">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-history"></i> Información de Auditoría
+                                </h6>
+                                <div class="row small text-muted">
+                                    <div class="col-md-6">
+                                        <strong>Fecha de Creación:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                    @if (Model.FechaModificacion.HasValue)
+                                    {
+                                        <div class="col-md-6">
+                                            <strong>Última Modificación:</strong> @Model.FechaModificacion.Value.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <a asp-action="Index" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-list"></i> Volver al Listado
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Información -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Información del Inmueble
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-building fa-3x text-primary"></i>
+                    </div>
+                    
+                    <dl class="row small">
+                        <dt class="col-sm-5">ID:</dt>
+                        <dd class="col-sm-7">@Model.Id</dd>
+
+                        <dt class="col-sm-5">Estado Actual:</dt>
+                        <dd class="col-sm-7">
+                            @if (Model.Disponible)
+                            {
+                                <span class="badge bg-success">Disponible</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No Disponible</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Activo:</dt>
+                        <dd class="col-sm-7">
+                            @if (Model.Activo)
+                            {
+                                <span class="badge bg-success">Sí</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">No</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Tipo:</dt>
+                        <dd class="col-sm-7">@Model.Tipo</dd>
+
+                        <dt class="col-sm-5">Uso:</dt>
+                        <dd class="col-sm-7">@Model.Uso</dd>
+
+                        <dt class="col-sm-5">Ambientes:</dt>
+                        <dd class="col-sm-7">@Model.Ambientes</dd>
+
+                        <dt class="col-sm-5">Precio:</dt>
+                        <dd class="col-sm-7">$@Model.Precio.ToString("0.00")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Resumen de Cambios -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exchange-alt"></i> Resumen de Cambios
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="resumenCambios" class="small">
+                        <p class="text-muted">Los cambios se mostrarán aquí...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contratos Relacionados -->
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-contract"></i> Contratos Relacionados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.TieneContratosActivos == true)
+                    {
+                        <div class="alert alert-warning small">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Este inmueble tiene contratos activos.</strong>
+                            <p class="mb-0 mt-1">Los cambios pueden afectar los contratos vigentes.</p>
+                        </div>
+                    }
+                    else if (ViewBag.TieneContratosHistoricos == true)
+                    {
+                        <div class="alert alert-info small">
+                            <i class="fas fa-history"></i>
+                            <strong>Contratos históricos encontrados.</strong>
+                            <p class="mb-0 mt-1">El inmueble tiene contratos finalizados.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success small">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Sin contratos registrados.</strong>
+                            <p class="mb-0 mt-1">No hay contratos asociados a este inmueble.</p>
+                        </div>
+                    }
+                    
+                    <div class="text-center mt-2">
+                        <a href="@Url.Action("Index", "Contratos", new { inmuebleId = Model.Id })" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> Ver Contratos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del formulario
+            const form = document.getElementById('inmuebleForm');
+            const direccionInput = document.getElementById('Direccion');
+            const propietarioSelect = document.getElementById('PropietarioId');
+            const tipoSelect = document.getElementById('Tipo');
+            const usoSelect = document.getElementById('Uso');
+            const ambientesInput = document.getElementById('Ambientes');
+            const precioInput = document.getElementById('Precio');
+            const coordenadasInput = document.getElementById('Coordenadas');
+            const disponibleSwitch = document.getElementById('disponibleSwitch');
+            const activoSwitch = document.getElementById('activoSwitch');
+            const resumenCambios = document.getElementById('resumenCambios');
+
+            // Valores originales
+            const valoresOriginales = {
+                direccion: direccionInput.value,
+                propietario: propietarioSelect.value,
+                tipo: tipoSelect.value,
+                uso: usoSelect.value,
+                ambientes: ambientesInput.value,
+                precio: precioInput.value,
+                coordenadas: coordenadasInput.value,
+                disponible: disponibleSwitch.checked,
+                activo: activoSwitch.checked
+            };
+
+            // Función para actualizar resumen de cambios
+            function actualizarResumenCambios() {
+                let cambios = [];
+
+                if (direccionInput.value !== valoresOriginales.direccion) {
+                    cambios.push(`<strong>Dirección:</strong> "${valoresOriginales.direccion}" → "${direccionInput.value}"`);
+                }
+
+                if (propietarioSelect.value !== valoresOriginales.propietario) {
+                    const originalText = propietarioSelect.querySelector(`option[value="${valoresOriginales.propietario}"]`)?.text || 'No seleccionado';
+                    const nuevoText = propietarioSelect.options[propietarioSelect.selectedIndex]?.text || 'No seleccionado';
+                    cambios.push(`<strong>Propietario:</strong> ${originalText} → ${nuevoText}`);
+                }
+
+                if (tipoSelect.value !== valoresOriginales.tipo) {
+                    cambios.push(`<strong>Tipo:</strong> ${valoresOriginales.tipo || 'No seleccionado'} → ${tipoSelect.value || 'No seleccionado'}`);
+                }
+
+                if (usoSelect.value !== valoresOriginales.uso) {
+                    cambios.push(`<strong>Uso:</strong> ${valoresOriginales.uso || 'No seleccionado'} → ${usoSelect.value || 'No seleccionado'}`);
+                }
+
+                if (ambientesInput.value !== valoresOriginales.ambientes) {
+                    cambios.push(`<strong>Ambientes:</strong> ${valoresOriginales.ambientes} → ${ambientesInput.value}`);
+                }
+
+                if (precioInput.value !== valoresOriginales.precio) {
+                    const original = valoresOriginales.precio ? `$${parseFloat(valoresOriginales.precio).toLocaleString('es-AR')}` : '$0';
+                    const nuevo = precioInput.value ? `$${parseFloat(precioInput.value).toLocaleString('es-AR')}` : '$0';
+                    cambios.push(`<strong>Precio:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (coordenadasInput.value !== valoresOriginales.coordenadas) {
+                    cambios.push(`<strong>Coordenadas:</strong> ${valoresOriginales.coordenadas || 'No especificadas'} → ${coordenadasInput.value || 'No especificadas'}`);
+                }
+
+                if (disponibleSwitch.checked !== valoresOriginales.disponible) {
+                    const original = valoresOriginales.disponible ? 'Disponible' : 'No Disponible';
+                    const nuevo = disponibleSwitch.checked ? 'Disponible' : 'No Disponible';
+                    cambios.push(`<strong>Disponibilidad:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (activoSwitch.checked !== valoresOriginales.activo) {
+                    const original = valoresOriginales.activo ? 'Activo' : 'Inactivo';
+                    const nuevo = activoSwitch.checked ? 'Activo' : 'Inactivo';
+                    cambios.push(`<strong>Estado:</strong> ${original} → ${nuevo}`);
+                }
+
+                if (cambios.length > 0) {
+                    let html = '<strong>Cambios detectados:</strong><ul class="mt-2 mb-0">';
+                    cambios.forEach(cambio => {
+                        html += `<li>${cambio}</li>`;
+                    });
+                    html += '</ul>';
+                    resumenCambios.innerHTML = html;
+                } else {
+                    resumenCambios.innerHTML = '<p class="text-muted mb-0">No se detectaron cambios</p>';
+                }
+            }
+
+            // Event listeners para detectar cambios
+            const elementos = [direccionInput, propietarioSelect, tipoSelect, usoSelect, ambientesInput, precioInput, coordenadasInput, disponibleSwitch, activoSwitch];
+            
+            elementos.forEach(elemento => {
+                if (elemento.type === 'checkbox') {
+                    elemento.addEventListener('change', actualizarResumenCambios);
+                } else {
+                    elemento.addEventListener('input', actualizarResumenCambios);
+                }
+            });
+
+            // Validación de coordenadas
+            coordenadasInput.addEventListener('blur', function() {
+                if (this.value && !this.value.match(/^-?\d+\.?\d*,\s*-?\d+\.?\d*$/)) {
+                    this.classList.add('is-invalid');
+                    // Mostrar mensaje de error
+                    if (!this.nextElementSibling.classList.contains('text-danger')) {
+                        const errorSpan = document.createElement('span');
+                        errorSpan.className = 'text-danger small';
+                        errorSpan.textContent = 'Formato inválido. Use: latitud, longitud';
+                        this.parentNode.insertBefore(errorSpan, this.nextElementSibling);
+                    }
+                } else {
+                    this.classList.remove('is-invalid');
+                    const errorSpan = this.parentNode.querySelector('.text-danger.small');
+                    if (errorSpan) {
+                        errorSpan.remove();
+                    }
+                }
+            });
+
+            // Confirmación antes de enviar si hay cambios importantes
+            form.addEventListener('submit', function(e) {
+                const cambiosImportantes = 
+                    direccionInput.value !== valoresOriginales.direccion ||
+                    propietarioSelect.value !== valoresOriginales.propietario ||
+                    precioInput.value !== valoresOriginales.precio;
+
+                if (cambiosImportantes) {
+                    const confirmar = confirm('⚠️ Está a punto de guardar cambios importantes en el inmueble. ¿Desea continuar?');
+                    if (!confirmar) {
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            // Inicializar resumen
+            actualizarResumenCambios();
+        });
+    </script>
+}

@@ -1,0 +1,347 @@
+@model Inmobiliaria.Models.Contrato
+
+@{
+    ViewData["Title"] = "Renovar Contrato";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Contratos">Contratos</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@ViewBag.ContratoOriginalId">Contrato Original</a></li>
+                    <li class="breadcrumb-item active">Renovar Contrato</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h2 class="card-title mb-0">🔄 Renovar Contrato</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Renovar" id="renovarForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <input type="hidden" asp-for="InmuebleId" />
+                        <input type="hidden" asp-for="InquilinoId" />
+
+                        <!-- Información del Contrato Original -->
+                        <div class="alert alert-info">
+                            <h5>📋 Contrato Original</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Inmueble:</strong><br>
+                                    @if (Model.Inmueble != null)
+                                    {
+                                        @Model.Inmueble.Direccion
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Inquilino:</strong><br>
+                                    @if (Model.Inquilino != null)
+                                    {
+                                        @Model.Inquilino.NombreCompleto
+                                    }
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <strong>Monto Anterior:</strong> $@(ViewBag.MontoAnterior?.ToString("0.00") ?? "0.00")
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Fecha Fin Anterior:</strong> @(ViewBag.FechaFinAnterior?.ToString("dd/MM/yyyy") ?? "N/A")
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Fecha de Inicio (automática) -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaInicio" class="form-label fw-bold">📅 Fecha de Inicio *</label>
+                                    <input asp-for="FechaInicio" type="date" class="form-control bg-light" readonly />
+                                    <span asp-validation-for="FechaInicio" class="text-danger small"></span>
+                                    <div class="form-text">Calculada automáticamente (día siguiente al fin del contrato anterior)</div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de Fin -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="FechaFin" class="form-label fw-bold">📅 Fecha de Fin *</label>
+                                    <input asp-for="FechaFin" type="date" class="form-control" 
+                                           id="fechaFin" required />
+                                    <span asp-validation-for="FechaFin" class="text-danger small"></span>
+                                    <div class="form-text">Recomendado: 1 año desde la fecha de inicio</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monto del Nuevo Contrato -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Monto" class="form-label fw-bold">💰 Nuevo Monto Mensual *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input asp-for="Monto" type="number" class="form-control" 
+                                               step="0.01" min="1" id="montoInput" required />
+                                    </div>
+                                    <span asp-validation-for="Monto" class="text-danger small"></span>
+                                    <div class="form-text">
+                                        Monto anterior: <span class="fw-bold">$@(ViewBag.MontoAnterior?.ToString("0.00") ?? "0.00")</span>
+                                        <span id="variacionMonto" class="badge ms-2"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información de Duración -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">⏱️ Duración del Nuevo Contrato</label>
+                                    <div class="alert alert-info py-2">
+                                        <div id="duracionInfo">Calculando duración...</div>
+                                        <div id="montoTotalInfo" class="fw-bold mt-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ajuste Automático de Fechas -->
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">⚡ Ajuste Rápido de Duración</label>
+                            <div class="btn-group w-100" role="group">
+                                <button type="button" class="btn btn-outline-primary" onclick="establecerDuracion(6)">
+                                    6 Meses
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="establecerDuracion(12)">
+                                    1 Año
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="establecerDuracion(24)">
+                                    2 Años
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-check mb-3">
+                            <input asp-for="Vigente" class="form-check-input" checked />
+                            <label asp-for="Vigente" class="form-check-label fw-bold">
+                                Nuevo Contrato Vigente
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-sync-alt"></i> Renovar Contrato
+                            </button>
+                            <a asp-action="Details" asp-route-id="@ViewBag.ContratoOriginalId" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Información -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">💡 Información de Renovación</h5>
+                </div>
+                <div class="card-body">
+                    <h6>✅ Beneficios:</h6>
+                    <ul class="small">
+                        <li>Mantiene mismo inmueble e inquilino</li>
+                        <li>Continúa sin interrupciones</li>
+                        <li>Conserva el historial</li>
+                        <li>Proceso simplificado</li>
+                    </ul>
+
+                    <h6>📊 Comparación:</h6>
+                    <div id="comparacionInfo" class="small text-muted">
+                        Complete el formulario para ver la comparación
+                    </div>
+
+                    <div class="alert alert-success small mt-3">
+                        <strong>💡 Tip:</strong> La renovación crea un nuevo contrato independiente del anterior.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen de la Renovación -->
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">📈 Resumen de Renovación</h5>
+                </div>
+                <div class="card-body">
+                    <div id="resumenRenovacion" class="text-center">
+                        <p class="text-muted">Complete el formulario para ver el resumen</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fechaInicio = document.getElementById('FechaInicio');
+            const fechaFin = document.getElementById('fechaFin');
+            const montoInput = document.getElementById('montoInput');
+            const duracionInfo = document.getElementById('duracionInfo');
+            const montoTotalInfo = document.getElementById('montoTotalInfo');
+            const variacionMonto = document.getElementById('variacionMonto');
+            const comparacionInfo = document.getElementById('comparacionInfo');
+            const resumenRenovacion = document.getElementById('resumenRenovacion');
+
+            const montoAnterior = @(ViewBag.MontoAnterior ?? 0);
+
+            // Calcular duración cuando cambian las fechas
+            function calcularDuracion() {
+                if (fechaInicio.value && fechaFin.value) {
+                    const inicio = new Date(fechaInicio.value);
+                    const fin = new Date(fechaFin.value);
+                    
+                    if (fin > inicio) {
+                        const diffTime = Math.abs(fin - inicio);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const diffMeses = Math.ceil(diffDays / 30);
+                        
+                        duracionInfo.textContent = `${diffDays} días (${diffMeses} meses)`;
+                        
+                        // Calcular monto total
+                        const monto = parseFloat(montoInput.value) || 0;
+                        const montoTotal = monto * diffMeses;
+                        montoTotalInfo.textContent = `Monto total: $${montoTotal.toLocaleString('es-AR')}`;
+                        
+                        // Validar duración mínima
+                        if (diffDays < 30) {
+                            duracionInfo.innerHTML += ' <span class="badge bg-warning">Duración mínima: 30 días</span>';
+                        }
+                    } else {
+                        duracionInfo.textContent = 'La fecha de fin debe ser posterior a la de inicio';
+                        montoTotalInfo.textContent = '';
+                    }
+                }
+                actualizarComparacion();
+                actualizarResumenRenovacion();
+            }
+
+            // Establecer duración predefinida
+            window.establecerDuracion = function(meses) {
+                if (fechaInicio.value) {
+                    const inicio = new Date(fechaInicio.value);
+                    const fin = new Date(inicio);
+                    fin.setMonth(fin.getMonth() + meses);
+                    fechaFin.value = fin.toISOString().split('T')[0];
+                    calcularDuracion();
+                }
+            };
+
+            // Actualizar comparación con contrato anterior
+            function actualizarComparacion() {
+                const montoNuevo = parseFloat(montoInput.value) || 0;
+                
+                if (montoAnterior > 0) {
+                    const diferencia = montoNuevo - montoAnterior;
+                    const porcentaje = (diferencia / montoAnterior) * 100;
+                    
+                    let html = `
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Monto Anterior:</strong></td>
+                                <td>$${montoAnterior.toLocaleString('es-AR')}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Monto Nuevo:</strong></td>
+                                <td>$${montoNuevo.toLocaleString('es-AR')}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Variación:</strong></td>
+                                <td>
+                    `;
+                    
+                    if (diferencia > 0) {
+                        html += `<span class="text-success">+$${diferencia.toLocaleString('es-AR')} (+${porcentaje.toFixed(1)}%)</span>`;
+                        variacionMonto.className = 'badge bg-success';
+                        variacionMonto.textContent = `+${porcentaje.toFixed(1)}%`;
+                    } else if (diferencia < 0) {
+                        html += `<span class="text-danger">$${diferencia.toLocaleString('es-AR')} (${porcentaje.toFixed(1)}%)</span>`;
+                        variacionMonto.className = 'badge bg-danger';
+                        variacionMonto.textContent = `${porcentaje.toFixed(1)}%`;
+                    } else {
+                        html += `<span class="text-muted">Sin cambios</span>`;
+                        variacionMonto.className = 'badge bg-secondary';
+                        variacionMonto.textContent = '0%';
+                    }
+                    
+                    html += `</td></tr></table>`;
+                    comparacionInfo.innerHTML = html;
+                }
+            }
+
+            // Actualizar resumen de renovación
+            function actualizarResumenRenovacion() {
+                const montoNuevo = parseFloat(montoInput.value) || 0;
+                let html = '<div class="text-start">';
+                
+                if (fechaInicio.value && fechaFin.value) {
+                    const inicio = new Date(fechaInicio.value).toLocaleDateString('es-AR');
+                    const fin = new Date(fechaFin.value).toLocaleDateString('es-AR');
+                    const diffTime = Math.abs(new Date(fechaFin.value) - new Date(fechaInicio.value));
+                    const diffMeses = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30));
+                    const montoTotal = montoNuevo * diffMeses;
+                    
+                    html += `
+                        <p><strong>Nuevo Período:</strong><br><small>${inicio} al ${fin}</small></p>
+                        <p><strong>Duración:</strong><br><small>${diffMeses} meses</small></p>
+                        <p><strong>Monto Mensual:</strong><br><small>$${montoNuevo.toLocaleString('es-AR')}</small></p>
+                        <p><strong>Monto Total:</strong><br><small>$${montoTotal.toLocaleString('es-AR')}</small></p>
+                    `;
+                } else {
+                    html += '<p class="text-muted">Complete las fechas para ver el resumen</p>';
+                }
+                
+                html += '</div>';
+                resumenRenovacion.innerHTML = html;
+            }
+
+            // Event listeners
+            fechaFin.addEventListener('change', calcularDuracion);
+            montoInput.addEventListener('input', calcularDuracion);
+
+            // Validación antes de enviar
+            document.getElementById('renovarForm').addEventListener('submit', function(e) {
+                const inicio = new Date(fechaInicio.value);
+                const fin = new Date(fechaFin.value);
+                
+                if (fin <= inicio) {
+                    e.preventDefault();
+                    alert('❌ La fecha de fin debe ser posterior a la fecha de inicio.');
+                    return;
+                }
+                
+                const diffTime = Math.abs(fin - inicio);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 30) {
+                    e.preventDefault();
+                    alert('❌ La duración mínima del contrato es de 30 días.');
+                    return;
+                }
+            });
+
+            // Inicializar cálculos
+            calcularDuracion();
+        });
+    </script>
+}

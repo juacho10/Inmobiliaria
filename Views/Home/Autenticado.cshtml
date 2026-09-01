@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Página Autenticada";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4>✅ ¡Acceso Autorizado!</h4>
+        <p>Esta página requiere autenticación y tú estás autenticado.</p>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>Información del Usuario</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Nombre:</strong> @User.Identity.Name</p>
+            <p><strong>Autenticado:</strong> @User.Identity.IsAuthenticated</p>
+            <p><strong>Rol:</strong> @User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value</p>
+            <p><strong>Nombre Completo:</strong> @User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,423 @@
+@model Inmobiliaria.Models.Contrato
+
+@{
+    ViewData["Title"] = "Eliminar Contrato";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Contratos">Contratos</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">Contrato #@Model.Id</a></li>
+                    <li class="breadcrumb-item active">Eliminar Contrato</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Eliminar Contrato #@Model.Id
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <!-- Alerta de advertencia crítica -->
+                    <div class="alert alert-danger">
+                        <h4 class="alert-heading">
+                            <i class="fas fa-radiation"></i> ¡ACCIÓN CRÍTICA!
+                        </h4>
+                        <p class="mb-0">
+                            Está a punto de eliminar permanentemente un contrato de alquiler. 
+                            Esta acción <strong>AFECTARÁ PAGOS, HISTORIAL Y REPORTES</strong>.
+                        </p>
+                    </div>
+
+                    <!-- Información del Contrato -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-contract"></i> Información del Contrato a Eliminar
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>🏠 Información del Inmueble</h6>
+                                    <dl>
+                                        <dt>Dirección:</dt>
+                                        <dd>
+                                            @if (Model.Inmueble != null)
+                                            {
+                                                @Model.Inmueble.Direccion
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No disponible</span>
+                                            }
+                                        </dd>
+
+                                        <dt>Tipo:</dt>
+                                        <dd>@(Model.Inmueble?.Tipo ?? "N/A")</dd>
+
+                                        <dt>Propietario:</dt>
+                                        <dd>
+                                            @if (Model.Inmueble?.Propietario != null)
+                                            {
+                                                @Model.Inmueble.Propietario.NombreCompleto
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No disponible</span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>👤 Información del Inquilino</h6>
+                                    <dl>
+                                        <dt>Nombre:</dt>
+                                        <dd>
+                                            @if (Model.Inquilino != null)
+                                            {
+                                                @Model.Inquilino.NombreCompleto
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No disponible</span>
+                                            }
+                                        </dd>
+
+                                        <dt>DNI:</dt>
+                                        <dd>@(Model.Inquilino?.Dni ?? "N/A")</dd>
+
+                                        <dt>Contacto:</dt>
+                                        <dd>@(Model.Inquilino?.Telefono ?? "N/A")</dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <dt>Fecha Inicio:</dt>
+                                    <dd>@Model.FechaInicio.ToString("dd/MM/yyyy")</dd>
+                                </div>
+                                <div class="col-md-4">
+                                    <dt>Fecha Fin:</dt>
+                                    <dd>@Model.FechaFin.ToString("dd/MM/yyyy")</dd>
+                                </div>
+                                <div class="col-md-4">
+                                    <dt>Monto Mensual:</dt>
+                                    <dd>$@Model.Monto.ToString("0.00")</dd>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <dt>Estado:</dt>
+                                    <dd>
+                                        @if (Model.Vigente)
+                                        {
+                                            <span class="badge bg-success">Vigente</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Finalizado</span>
+                                        }
+                                    </dd>
+                                </div>
+                                <div class="col-md-4">
+                                    <dt>Duración:</dt>
+                                    <dd>
+                                        @{
+                                            var duracion = (Model.FechaFin - Model.FechaInicio).Days;
+                                            var meses = duracion / 30;
+                                        }
+                                        @duracion días (@meses meses)
+                                    </dd>
+                                </div>
+                                <div class="col-md-4">
+                                    <dt>Monto Total:</dt>
+                                    <dd>$@((Model.Monto * meses).ToString("0.00"))</dd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Verificación de Impacto -->
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-circle"></i> Impacto de la Eliminación
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <h6>
+                                    <i class="fas fa-radiation"></i> Esta acción eliminará:
+                                </h6>
+                                <ul class="mb-0">
+                                    <li>Registro completo del contrato</li>
+                                    <li>Historial de pagos asociados</li>
+                                    <li>Información de auditoría</li>
+                                    <li>Datos para reportes históricos</li>
+                                </ul>
+                            </div>
+
+                            <!-- Información de Pagos Relacionados -->
+                            @if (ViewBag.TienePagosActivos == true)
+                            {
+                                <div class="alert alert-danger">
+                                    <h6>
+                                        <i class="fas fa-ban"></i> NO SE PUEDE ELIMINAR
+                                    </h6>
+                                    <p class="mb-0">
+                                        Este contrato tiene pagos registrados. 
+                                        Debe eliminar primero todos los pagos asociados.
+                                    </p>
+                                    <div class="mt-2">
+                                        <a href="@Url.Action("Index", "Pagos", new { contratoId = Model.Id })" 
+                                           class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-money-bill-wave"></i> Ver Pagos Asociados
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                            else if (ViewBag.TienePagosHistoricos == true)
+                            {
+                                <div class="alert alert-info">
+                                    <h6>
+                                        <i class="fas fa-history"></i> Pagos Históricos
+                                    </h6>
+                                    <p class="mb-0">
+                                        Este contrato tiene pagos históricos registrados. 
+                                        La eliminación afectará los reportes financieros.
+                                    </p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-success">
+                                    <h6>
+                                        <i class="fas fa-check-circle"></i> Sin Pagos Registrados
+                                    </h6>
+                                    <p class="mb-0">
+                                        No se detectaron pagos asociados a este contrato.
+                                    </p>
+                                </div>
+                            }
+
+                            <!-- Estado del Contrato -->
+                            @if (Model.Vigente)
+                            {
+                                <div class="alert alert-warning">
+                                    <h6>
+                                        <i class="fas fa-clock"></i> Contrato Vigente
+                                    </h6>
+                                    <p class="mb-0">
+                                        Este contrato se encuentra actualmente vigente. 
+                                        La eliminación generará inconsistencias en el sistema.
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Formulario de Eliminación -->
+                    <form asp-action="Delete" class="mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        @if (ViewBag.TienePagosActivos == true || Model.Vigente)
+                        {
+                            <div class="d-grid gap-2">
+                                <div class="alert alert-danger">
+                                    <h6>
+                                        <i class="fas fa-lock"></i> Eliminación Bloqueada
+                                    </h6>
+                                    <p class="mb-2">
+                                        No es posible eliminar este contrato debido a las siguientes restricciones:
+                                    </p>
+                                    <ul class="mb-2">
+                                        @if (Model.Vigente)
+                                        {
+                                            <li>El contrato se encuentra vigente</li>
+                                        }
+                                        @if (ViewBag.TienePagosActivos == true)
+                                        {
+                                            <li>Existen pagos asociados al contrato</li>
+                                        }
+                                    </ul>
+                                    <p class="mb-0">
+                                        <strong>Acciones recomendadas:</strong>
+                                    </p>
+                                    <div class="mt-2">
+                                        @if (Model.Vigente)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-edit"></i> Finalizar Contrato
+                                            </a>
+                                        }
+                                        @if (ViewBag.TienePagosActivos == true)
+                                        {
+                                            <a href="@Url.Action("Index", "Pagos", new { contratoId = Model.Id })" 
+                                               class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i> Gestionar Pagos
+                                            </a>
+                                        }
+                                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-arrow-left"></i> Volver al Detalle
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="confirmacionTexto" class="form-label fw-bold">
+                                            Escriba "ELIMINAR CONTRATO" para confirmar:
+                                        </label>
+                                        <input type="text" class="form-control" id="confirmacionTexto" 
+                                               placeholder="Escriba ELIMINAR CONTRATO aquí..." 
+                                               oninput="validarConfirmacion()">
+                                        <div class="form-text">
+                                            Medida de seguridad para evitar eliminaciones accidentales.
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group form-check">
+                                        <input type="checkbox" class="form-check-input" id="confirmacionCheckbox" 
+                                               onchange="validarConfirmacion()">
+                                        <label class="form-check-label text-danger fw-bold" for="confirmacionCheckbox">
+                                            Comprendo que esta acción es irreversible y eliminará permanentemente toda la información del contrato.
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid gap-2 h-100">
+                                        <button type="submit" class="btn btn-danger btn-lg" id="btnEliminar" disabled>
+                                            <i class="fas fa-trash"></i> ELIMINAR CONTRATO DEFINITIVAMENTE
+                                        </button>
+                                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
+                                            <i class="fas fa-times"></i> Cancelar y Volver
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alternativas Recomendadas -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb"></i> Alternativas Recomendadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card border-success h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-flag fa-2x text-success mb-3"></i>
+                                    <h6>Marcar como Finalizado</h6>
+                                    <p class="small text-muted">
+                                        En lugar de eliminar, marque el contrato como finalizado para mantener el historial.
+                                    </p>
+                                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-edit"></i> Finalizar Contrato
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-warning h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-archive fa-2x text-warning mb-3"></i>
+                                    <h6>Archivar Contrato</h6>
+                                    <p class="small text-muted">
+                                        Archive el contrato para mantener la información pero ocultarlo de las listas activas.
+                                    </p>
+                                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-archive"></i> Archivar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-info h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-pdf fa-2x text-info mb-3"></i>
+                                    <h6>Exportar Información</h6>
+                                    <p class="small text-muted">
+                                        Exporte la información del contrato antes de cualquier acción irreversible.
+                                    </p>
+                                    <button class="btn btn-outline-info btn-sm" onclick="exportarContrato()">
+                                        <i class="fas fa-download"></i> Exportar PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function validarConfirmacion() {
+            const input = document.getElementById('confirmacionTexto');
+            const checkbox = document.getElementById('confirmacionCheckbox');
+            const boton = document.getElementById('btnEliminar');
+            const textoConfirmacion = 'ELIMINAR CONTRATO';
+            
+            const textoCorrecto = input.value.toUpperCase() === textoConfirmacion;
+            const checkboxMarcado = checkbox.checked;
+            
+            if (textoCorrecto && checkboxMarcado) {
+                boton.disabled = false;
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+            } else {
+                boton.disabled = true;
+                input.classList.remove('is-valid');
+                if (!textoCorrecto && input.value !== '') {
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            }
+        }
+
+        // Confirmación adicional al hacer clic en el botón
+        document.getElementById('btnEliminar')?.addEventListener('click', function(e) {
+            if (!confirm('¿ESTÁ ABSOLUTAMENTE SEGURO?\n\nEsta acción ELIMINARÁ PERMANENTEMENTE el contrato y toda su información asociada.\n\n¡ESTA ACCIÓN NO SE PUEDE DESHACER!')) {
+                e.preventDefault();
+            }
+        });
+
+        function exportarContrato() {
+            alert('Función de exportación a PDF habilitada próximamente...');
+            // Aquí iría la lógica para generar y descargar un PDF del contrato
+        }
+
+        // Prevenir envío accidental con la tecla Enter
+        document.getElementById('confirmacionTexto')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    </script>
+}

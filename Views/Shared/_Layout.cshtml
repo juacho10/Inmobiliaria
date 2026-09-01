@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Inmobiliaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> -->
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-building"></i> Inmobiliaria
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        
+                        <!-- ✅ MENÚ SOLO PARA USUARIOS AUTENTICADOS -->
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Propietarios" asp-action="Index">
+                                    <i class="fas fa-user-tie"></i> Propietarios
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Inquilinos" asp-action="Index">
+                                    <i class="fas fa-users"></i> Inquilinos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="" asp-controller="Inmuebles" asp-action="Index">
+                                    <i class="fas fa-building"></i> Inmuebles
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <!-- ✅ CORREGIDO: Contrato en singular -->
+                                <a class="nav-link text-light" asp-area="" asp-controller="Contrato" asp-action="Index">
+                                    <i class="fas fa-file-contract"></i> Contratos
+                                </a>
+                            </li>
+                            
+                            <!-- ✅ MENÚ DE PRUEBAS DE AUTORIZACIÓN -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-vial"></i> Pruebas Auth
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Home" asp-action="Autenticado">
+                                            <i class="fas fa-check-circle text-success"></i> Página Autenticada
+                                        </a>
+                                    </li>
+                                    @if (User.IsInRole("Administrador"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Home" asp-action="SuperPrivado">
+                                                <i class="fas fa-lock text-warning"></i> Super Privada (Admin)
+                                            </a>
+                                        </li>
+                                    }
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="UserInfo">
+                                            <i class="fas fa-info-circle text-info"></i> Info Usuario
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        
+                        <li class="nav-item">
+                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                <i class="fas fa-shield-alt"></i> Privacidad
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- ✅ MENÚ DE USUARIO MEJORADO -->
+                    <ul class="navbar-nav">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle"></i> 
+                                    @User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value
+                                    @if (User.IsInRole("Administrador"))
+                                    {
+                                        <span class="badge bg-danger ms-1">Admin</span>
+                                    }
+                                    else if (User.IsInRole("Empleado"))
+                                    {
+                                        <span class="badge bg-warning ms-1">Empleado</span>
+                                    }
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <span class="dropdown-item-text">
+                                            <small class="text-muted">Conectado como:</small><br>
+                                            <strong>@User.Identity.Name</strong>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="dropdown-item-text">
+                                            <small class="text-muted">Rol:</small><br>
+                                            <strong>@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value</strong>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="dropdown-item-text">
+                                            <small class="text-muted">Nombre:</small><br>
+                                            <strong>@User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value</strong>
+                                        </span>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="UserInfo">
+                                            <i class="fas fa-info-circle text-info"></i> Ver Info Completa
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-controller="Account" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- ✅ MOSTRAR INFORMACIÓN DE AUTENTICACIÓN -->
+        @if (User.Identity.IsAuthenticated)
+        {
+            <div class="alert alert-info alert-dismissible fade show mt-2" role="alert">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-user-check"></i> 
+                        <strong>Conectado:</strong> 
+                        @User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value
+                        <span class="badge 
+                            @(User.IsInRole("Administrador") ? "bg-danger" : 
+                              User.IsInRole("Empleado") ? "bg-warning" : "bg-secondary")">
+                            @User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value
+                        </span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted bg-light">
+        <div class="container py-3">
+            <div class="row">
+                <div class="col-md-6">
+                    &copy; 2024 - Inmobiliaria - 
+                    <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-decoration-none">Política de Privacidad</a>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> 
+                            @User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value
+                            | 
+                            <i class="fas fa-shield-alt"></i> 
+                            @User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value
+                        </small>
+                    }
+                    else
+                    {
+                        <small class="text-muted">
+                            <i class="fas fa-user-slash"></i> No autenticado
+                        </small>
+                    }
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- <script src="~/js/site.js" asp-append-version="true"></script> -->
+    
+    <!-- ✅ SCRIPT PARA MEJORAR LA EXPERIENCIA DE AUTENTICACIÓN -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cerrar automáticamente la alerta de autenticación después de 5 segundos
+            const authAlert = document.querySelector('.alert-info');
+            if (authAlert) {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(authAlert);
+                    bsAlert.close();
+                }, 5000);
+            }
+
+            // Prevenir envío doble de formularios
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                    }
+                });
+            });
+
+            // Mostrar información del usuario en consola para debugging
+            console.log('Estado de autenticación:', '@User.Identity.IsAuthenticated' === 'True' ? 'Autenticado' : 'No autenticado');
+            console.log('Usuario:', '@User.Identity.Name');
+            console.log('Rol:', '@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value');
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

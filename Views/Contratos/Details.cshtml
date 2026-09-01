@@ -1,0 +1,213 @@
+@model Inmobiliaria.Models.Contrato
+
+@{
+    ViewData["Title"] = "Detalles del Contrato";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">📄 Detalles del Contrato #@Model.Id</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>🏠 Información del Inmueble</h5>
+                            <hr>
+                            @if (Model.Inmueble != null)
+                            {
+                                <dl>
+                                    <dt>Dirección:</dt>
+                                    <dd>@Model.Inmueble.Direccion</dd>
+                                    
+                                    <dt>Tipo:</dt>
+                                    <dd>@Model.Inmueble.Tipo</dd>
+                                    
+                                    <dt>Uso:</dt>
+                                    <dd>
+                                        <span class="badge @(Model.Inmueble.Uso == "Comercial" ? "bg-info" : "bg-success")">
+                                            @Model.Inmueble.Uso
+                                        </span>
+                                    </dd>
+                                    
+                                    <dt>Ambientes:</dt>
+                                    <dd>@Model.Inmueble.Ambientes</dd>
+                                    
+                                    <dt>Precio Base:</dt>
+                                    <dd>$@Model.Inmueble.Precio</dd>
+                                    
+                                    @if (Model.Inmueble.Propietario != null)
+                                    {
+                                        <dt>Propietario:</dt>
+                                        <dd>@Model.Inmueble.Propietario.NombreCompleto</dd>
+                                    }
+                                </dl>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No hay información del inmueble.</p>
+                            }
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>👤 Información del Inquilino</h5>
+                            <hr>
+                            @if (Model.Inquilino != null)
+                            {
+                                <dl>
+                                    <dt>Nombre:</dt>
+                                    <dd>@Model.Inquilino.NombreCompleto</dd>
+                                    
+                                    <dt>DNI:</dt>
+                                    <dd>@Model.Inquilino.Dni</dd>
+                                    
+                                    <dt>Teléfono:</dt>
+                                    <dd>@Model.Inquilino.Telefono</dd>
+                                    
+                                    <dt>Email:</dt>
+                                    <dd>@Model.Inquilino.Email</dd>
+                                </dl>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No hay información del inquilino.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <h5>📅 Información del Contrato</h5>
+                    <hr>
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha Inicio:</dt>
+                        <dd class="col-sm-8">@Model.FechaInicio.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Fecha Fin:</dt>
+                        <dd class="col-sm-8">@Model.FechaFin.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Monto Mensual:</dt>
+                        <dd class="col-sm-8">$@Model.Monto</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Vigente)
+                            {
+                                <span class="badge bg-success">Vigente</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Finalizado</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Fecha Creación:</dt>
+                        <dd class="col-sm-8">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                        @if (Model.FechaModificacion.HasValue)
+                        {
+                            <dt class="col-sm-4">Última Modificación:</dt>
+                            <dd class="col-sm-8">@Model.FechaModificacion.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                        }
+                    </dl>
+
+                    <!-- Información de Auditoría (solo para administradores) -->
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <h5 class="mt-4">👥 Información de Auditoría</h5>
+                        <hr>
+                        <dl class="row">
+                            @if (Model.UsuarioCreacionId != 0)
+                            {
+                                <dt class="col-sm-4">Creado por:</dt>
+                                <dd class="col-sm-8">Usuario ID: @Model.UsuarioCreacionId</dd>
+                            }
+                            
+                            @if (Model.UsuarioModificacionId.HasValue)
+                            {
+                                <dt class="col-sm-4">Modificado por:</dt>
+                                <dd class="col-sm-8">Usuario ID: @Model.UsuarioModificacionId</dd>
+                            }
+                        </dl>
+                    }
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group" role="group">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">✏️ Editar</a>
+                        @if (Model.Vigente)
+                        {
+                            <a asp-action="Renovar" asp-route-id="@Model.Id" class="btn btn-success">🔄 Renovar</a>
+                        }
+                        <a asp-action="Index" class="btn btn-secondary">📋 Volver al Listado</a>
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">🗑️ Eliminar</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">📊 Resumen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-file-contract fa-3x text-primary"></i>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Duración:</strong><br>
+                        @{
+                            var duracion = (Model.FechaFin - Model.FechaInicio).Days / 30;
+                        }
+                        @duracion meses
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Monto Total:</strong><br>
+                        $@(Model.Monto * duracion)
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Tiempo Restante:</strong><br>
+                        @if (Model.Vigente)
+                        {
+                            var diasRestantes = (Model.FechaFin - DateTime.Today).Days;
+                            if (diasRestantes > 0)
+                            {
+                                <span class="text-success">@diasRestantes días</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Vencido</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">Finalizado</span>
+                        }
+                    </div>
+                    
+                    <hr>
+                    <div class="text-center">
+                        @if (Model.Vigente)
+                        {
+                            <span class="badge bg-success p-2">✅ VIGENTE</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary p-2">❌ FINALIZADO</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+}
