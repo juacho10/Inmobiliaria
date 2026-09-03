@@ -17,20 +17,20 @@ namespace Inmobiliaria.Data
         public DbSet<Usuario> Usuarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
+{
+    base.OnModelCreating(modelBuilder);
 
-            // ✅ SOLUCIÓN DateTime para PostgreSQL
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+    // ✅ SOLUCIÓN DateTime para MySQL
+    foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+    {
+        foreach (var property in entityType.GetProperties())
+        {
+            if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
             {
-                foreach (var property in entityType.GetProperties())
-                {
-                    if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
-                    {
-                        property.SetColumnType("timestamp without time zone");
-                    }
-                }
+                property.SetColumnType("DATETIME");
             }
+        }
+    }
 
             // Configurar Usuario
             modelBuilder.Entity<Usuario>(entity =>

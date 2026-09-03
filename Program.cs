@@ -7,16 +7,13 @@ using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ SOLUCIÓN: Configurar DateTime para PostgreSQL
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure PostgreSQL
+// Configure MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Register repositories
 builder.Services.AddScoped<IRepository<Propietario>, Repository<Propietario>>();
