@@ -20,8 +20,8 @@ namespace Inmobiliaria.Controllers
             _propietarioRepo = propietarioRepo;
         }
 
-        // GET: Inmuebles con paginación y búsqueda
-        public async Task<IActionResult> Index(int pagina = 1, string search = "", bool? disponible = null)
+        // GET: Inmuebles con paginación, búsqueda y filtro por propietario
+        public async Task<IActionResult> Index(int pagina = 1, string search = "", bool? disponible = null, int? propietarioId = null)
         {
             int elementosPorPagina = 10;
             var inmuebles = await _repository.GetAllAsync();
@@ -32,6 +32,19 @@ namespace Inmobiliaria.Controllers
                 if (inmueble.PropietarioId > 0)
                 {
                     inmueble.Propietario = await _propietarioRepo.GetByIdAsync(inmueble.PropietarioId);
+                }
+            }
+
+            // Filtrar por propietario
+            if (propietarioId.HasValue)
+            {
+                inmuebles = inmuebles.Where(i => i.PropietarioId == propietarioId.Value);
+                ViewBag.PropietarioId = propietarioId;
+
+                var prop = await _propietarioRepo.GetByIdAsync(propietarioId.Value);
+                if (prop != null)
+                {
+                    ViewBag.TituloEspecial = $"Inmuebles de: {prop.NombreCompleto}";
                 }
             }
 
@@ -104,6 +117,7 @@ namespace Inmobiliaria.Controllers
             {
                 await _repository.AddAsync(inmueble);
                 await _repository.SaveAsync();
+                TempData["SuccessMessage"] = "Inmueble creado exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -149,6 +163,7 @@ namespace Inmobiliaria.Controllers
                 inmueble.FechaModificacion = DateTime.Now;
                 _repository.Update(inmueble);
                 await _repository.SaveAsync();
+                TempData["SuccessMessage"] = "Inmueble actualizado exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -210,6 +225,7 @@ namespace Inmobiliaria.Controllers
             {
                 _repository.Remove(inmueble);
                 await _repository.SaveAsync();
+                TempData["SuccessMessage"] = "Inmueble eliminado exitosamente.";
             }
             return RedirectToAction(nameof(Index));
         }

@@ -101,8 +101,11 @@
                     </dl>
                 </div>
                 <div class="card-footer">
-                    <div class="btn-group" role="group">
+                    <div class="btn-group flex-wrap" role="group">
                         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">✏️ Editar</a>
+                        <a asp-controller="Contratos" asp-action="PorInmueble" asp-route-inmuebleId="@Model.Id" class="btn btn-info">
+                            📄 Ver Contratos
+                        </a>
                         <a asp-action="Index" class="btn btn-secondary">📋 Volver al Listado</a>
                         @if (User.IsInRole("Administrador"))
                         {
@@ -112,7 +115,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header bg-info text-white">
@@ -150,7 +153,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
-}

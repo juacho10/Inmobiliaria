@@ -1,0 +1,59 @@
+@model Inmobiliaria.Models.Pago
+
+@{
+    ViewData["Title"] = "Editar Pago";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h2 class="card-title mb-0">✏️ Editar Pago #@Model.Id</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Importante:</strong> Solo se puede editar el <strong>concepto</strong>. 
+                        El importe y la fecha NO son modificables.
+                    </div>
+
+                    <form asp-action="Edit">
+                        <input type="hidden" asp-for="Id" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Fecha de Pago (no editable)</label>
+                            <input value="@Model.FechaPago.ToString("dd/MM/yyyy")" class="form-control bg-light" readonly />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Importe (no editable)</label>
+                            <input value="$@Model.Importe.ToString("0.00")" class="form-control bg-light" readonly />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="concepto" class="form-label fw-bold">📝 Concepto *</label>
+                            <input type="text" id="concepto" name="concepto" value="@Model.Concepto" 
+                                   class="form-control" required />
+                            <span asp-validation-for="Concepto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a asp-action="Index" asp-route-contratoId="@Model.ContratoId" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -153,21 +153,44 @@ Interfaces
 │ - _dbSet: DbSet<T>                                            │
 └─────────────────────────────────────────────────────────────────┘
 
-🚀 INSTRUCCIONES PARA LEVANTAR LA BASE DE DATOS
 
-Requisitos Previos
-Software	Versión	Descripción
-Laragon	Última	Entorno de desarrollo local
-MySQL	5.7+	Base de datos
-MySQL Workbench	Opcional	Cliente gráfico
-.NET SDK	8.0	Framework de desarrollo
+---
 
-🔹 PASO 1: Iniciar Laragon y MySQL
-Abrir Laragon
+## 🚀 INSTRUCCIONES PARA LEVANTAR EL PROYECTO
 
-Hacer clic en "Start All"
+### Requisitos Previos
 
-Verificar que MySQL esté corriendo (ícono verde)
+| Software | Versión     | Descripción |
+|----------|-------------|-------------|
+| Laragon  | Última      | Entorno de desarrollo local |
+| MySQL    | 5.7+ / 8.0+ | Base de datos |
+| .NET SDK | 8.0         | Framework de desarrollo |
+| Git      | Última      | Control de versiones |
+
+---
+
+### 🔹 PASO 1: Iniciar Laragon y MySQL
+
+1. Abrir **Laragon**
+2. Hacer clic en **"Start All"**
+3. Verificar que **MySQL** esté corriendo (ícono verde)
+4. Verificar que la base de datos `inmobiliaria_db` **esté creada y vacía** (sin tablas)
+
+Si no la tenés creada, creala desde HeidiSQL o phpMyAdmin:
+
+```sql
+CREATE DATABASE inmobiliaria_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+🔹 PASO 2: Clonar el repositorio
+bash
+git clone <URL_DEL_REPO>
+cd Inmobiliaria
+O si ya lo tenés:
+
+bash
+cd "/d/ULP 2026/Laboratorio de programacion 2/Inmobiliaria"
+
+
 
 🛠️ EJECUTAR LA APLICACIÓN
 
@@ -206,17 +229,19 @@ admin@inmobiliaria.com	admin123	Administrador
 Tecnología	Versión	Uso
 .NET Core	8.0	Framework principal
 ASP.NET MVC	8.0	Patrón MVC
-Entity Framework Core	9.0.8	ORM
+Entity Framework Core	8.0.8	ORM
+Pomelo.EntityFrameworkCore.MySql	8.0.2	Provider MySQL
 MySQL	8.0+	Base de datos
-Pomelo.EntityFrameworkCore.MySql	9.0.0	Provider MySQL
-BCrypt.Net-Next	4.0.3	Encriptación
-Bootstrap	5.x	Estilos
-Font Awesome	6.x	Iconos
-jQuery	3.x	JavaScript
+BCrypt.Net-Next	4.0.3	Encriptación de contraseñas
+Bootstrap	5.3	Estilos
+Font Awesome	6.0	Iconos
+
 
 Paquetes NuGet
 
-<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8" />
-<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.8" />
-<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.1" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.8" />
+<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
 <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+<PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />

@@ -1,0 +1,77 @@
+@model Inmobiliaria.Models.Usuario
+
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="container mt-4">
+    <h1>👤 Mi Perfil</h1>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Foto de Perfil</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.Avatar))
+                    {
+                        <img src="@Model.Avatar" alt="Avatar" class="img-fluid rounded-circle mb-3" style="max-width: 200px; max-height: 200px;" />
+                    }
+                    else
+                    {
+                        <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 200px; height: 200px;">
+                            <i class="fas fa-user fa-5x text-white"></i>
+                        </div>
+                    }
+
+                    <form asp-action="CambiarAvatar" method="post" enctype="multipart/form-data" class="mb-2">
+                        @Html.AntiForgeryToken()
+                        <div class="input-group mb-2">
+                            <input type="file" name="archivo" class="form-control" accept="image/*" required />
+                            <button type="submit" class="btn btn-primary">Subir</button>
+                        </div>
+                    </form>
+
+                    @if (!string.IsNullOrEmpty(Model.Avatar))
+                    {
+                        <form asp-action="QuitarAvatar" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                <i class="fas fa-trash"></i> Quitar Foto
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Datos Personales</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Nombre:</dt>
+                        <dd class="col-sm-9">@Model.Nombre @Model.Apellido</dd>
+
+                        <dt class="col-sm-3">Email:</dt>
+                        <dd class="col-sm-9">@Model.Email</dd>
+
+                        <dt class="col-sm-3">Rol:</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge @(Model.Rol == "Administrador" ? "bg-danger" : "bg-warning text-dark")">
+                                @Model.Rol
+                            </span>
+                        </dd>
+                    </dl>
+
+                    <a asp-action="Editar" class="btn btn-warning">✏️ Editar Datos</a>
+                    <a asp-action="CambiarPassword" class="btn btn-danger">🔑 Cambiar Contraseña</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

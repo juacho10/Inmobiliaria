@@ -21,23 +21,23 @@
                                 <dl>
                                     <dt>Dirección:</dt>
                                     <dd>@Model.Inmueble.Direccion</dd>
-                                    
+
                                     <dt>Tipo:</dt>
                                     <dd>@Model.Inmueble.Tipo</dd>
-                                    
+
                                     <dt>Uso:</dt>
                                     <dd>
                                         <span class="badge @(Model.Inmueble.Uso == "Comercial" ? "bg-info" : "bg-success")">
                                             @Model.Inmueble.Uso
                                         </span>
                                     </dd>
-                                    
+
                                     <dt>Ambientes:</dt>
                                     <dd>@Model.Inmueble.Ambientes</dd>
-                                    
+
                                     <dt>Precio Base:</dt>
                                     <dd>$@Model.Inmueble.Precio</dd>
-                                    
+
                                     @if (Model.Inmueble.Propietario != null)
                                     {
                                         <dt>Propietario:</dt>
@@ -50,7 +50,7 @@
                                 <p class="text-muted">No hay información del inmueble.</p>
                             }
                         </div>
-                        
+
                         <div class="col-md-6">
                             <h5>👤 Información del Inquilino</h5>
                             <hr>
@@ -59,13 +59,13 @@
                                 <dl>
                                     <dt>Nombre:</dt>
                                     <dd>@Model.Inquilino.NombreCompleto</dd>
-                                    
+
                                     <dt>DNI:</dt>
                                     <dd>@Model.Inquilino.Dni</dd>
-                                    
+
                                     <dt>Teléfono:</dt>
                                     <dd>@Model.Inquilino.Telefono</dd>
-                                    
+
                                     <dt>Email:</dt>
                                     <dd>@Model.Inquilino.Email</dd>
                                 </dl>
@@ -101,6 +101,19 @@
                             }
                         </dd>
 
+                        @if (Model.FechaTerminacionAnticipada.HasValue)
+                        {
+                            <dt class="col-sm-4">Terminación Anticipada:</dt>
+                            <dd class="col-sm-8">
+                                <span class="text-danger">@Model.FechaTerminacionAnticipada.Value.ToString("dd/MM/yyyy")</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Multa:</dt>
+                            <dd class="col-sm-8">
+                                <span class="text-danger">$@Model.Multa?.ToString("0.00")</span>
+                            </dd>
+                        }
+
                         <dt class="col-sm-4">Fecha Creación:</dt>
                         <dd class="col-sm-8">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
 
@@ -117,37 +130,74 @@
                         <h5 class="mt-4">👥 Información de Auditoría</h5>
                         <hr>
                         <dl class="row">
-                            @if (Model.UsuarioCreacionId != 0)
+                            @if (Model.UsuarioCreacionId.HasValue && Model.UsuarioCreacionId > 0)
                             {
                                 <dt class="col-sm-4">Creado por:</dt>
-                                <dd class="col-sm-8">Usuario ID: @Model.UsuarioCreacionId</dd>
+                                <dd class="col-sm-8">
+                                    @if (Model.UsuarioCreacion != null)
+                                    {
+                                        @($"{Model.UsuarioCreacion.NombreCompleto} ({Model.UsuarioCreacion.Email})")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Usuario #@Model.UsuarioCreacionId</span>
+                                    }
+                                </dd>
                             }
-                            
-                            @if (Model.UsuarioModificacionId.HasValue)
+
+                            @if (Model.UsuarioModificacionId.HasValue && Model.UsuarioModificacionId > 0)
                             {
                                 <dt class="col-sm-4">Modificado por:</dt>
-                                <dd class="col-sm-8">Usuario ID: @Model.UsuarioModificacionId</dd>
+                                <dd class="col-sm-8">
+                                    @if (Model.UsuarioModificacion != null)
+                                    {
+                                        @($"{Model.UsuarioModificacion.NombreCompleto} ({Model.UsuarioModificacion.Email})")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Usuario #@Model.UsuarioModificacionId</span>
+                                    }
+                                </dd>
+                            }
+
+                            @if (Model.UsuarioTerminacionId.HasValue && Model.UsuarioTerminacionId > 0)
+                            {
+                                <dt class="col-sm-4">Terminado por:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.UsuarioTerminacion != null)
+                                    {
+                                        @($"{Model.UsuarioTerminacion.NombreCompleto} ({Model.UsuarioTerminacion.Email})")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Usuario #@Model.UsuarioTerminacionId</span>
+                                    }
+                                </dd>
                             }
                         </dl>
                     }
                 </div>
                 <div class="card-footer">
-                    <div class="btn-group" role="group">
+                    <div class="btn-group flex-wrap" role="group">
                         <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">✏️ Editar</a>
                         @if (Model.Vigente)
                         {
                             <a asp-action="Renovar" asp-route-id="@Model.Id" class="btn btn-success">🔄 Renovar</a>
+                            <a asp-action="Terminar" asp-route-id="@Model.Id" class="btn btn-danger">⚠️ Terminar</a>
                         }
+                        <a asp-controller="Pagos" asp-action="Index" asp-route-contratoId="@Model.Id" class="btn btn-info">
+                            💰 Ver Pagos
+                        </a>
                         <a asp-action="Index" class="btn btn-secondary">📋 Volver al Listado</a>
                         @if (User.IsInRole("Administrador"))
                         {
-                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">🗑️ Eliminar</a>
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">🗑️ Eliminar</a>
                         }
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header bg-info text-white">
@@ -157,7 +207,7 @@
                     <div class="text-center mb-3">
                         <i class="fas fa-file-contract fa-3x text-primary"></i>
                     </div>
-                    
+
                     <div class="mb-3">
                         <strong>Duración:</strong><br>
                         @{
@@ -165,12 +215,12 @@
                         }
                         @duracion meses
                     </div>
-                    
+
                     <div class="mb-3">
                         <strong>Monto Total:</strong><br>
                         $@(Model.Monto * duracion)
                     </div>
-                    
+
                     <div class="mb-3">
                         <strong>Tiempo Restante:</strong><br>
                         @if (Model.Vigente)
@@ -190,7 +240,7 @@
                             <span class="text-muted">Finalizado</span>
                         }
                     </div>
-                    
+
                     <hr>
                     <div class="text-center">
                         @if (Model.Vigente)
@@ -207,7 +257,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
-}

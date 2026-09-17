@@ -1,0 +1,59 @@
+@model IEnumerable<Inmobiliaria.Models.Inmueble>
+
+@{
+    ViewData["Title"] = "Resultado de Búsqueda";
+    var fechaInicio = (DateTime)ViewBag.FechaInicio;
+    var fechaFin = (DateTime)ViewBag.FechaFin;
+}
+
+<h1>🏠 Inmuebles Libres</h1>
+
+<div class="alert alert-info">
+    <strong>Período:</strong> @fechaInicio.ToString("dd/MM/yyyy") al @fechaFin.ToString("dd/MM/yyyy")
+    <br>
+    <strong>Inmuebles disponibles:</strong> @Model.Count()
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-warning">
+        <strong>No se encontraron inmuebles libres en ese período.</strong>
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Dirección</th>
+                <th>Tipo</th>
+                <th>Uso</th>
+                <th>Ambientes</th>
+                <th>Precio</th>
+                <th>Propietario</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Direccion</td>
+                    <td>@item.Tipo</td>
+                    <td>@item.Uso</td>
+                    <td>@item.Ambientes</td>
+                    <td>$@item.Precio.ToString("0.00")</td>
+                    <td>@(item.Propietario?.NombreCompleto ?? "N/A")</td>
+                    <td>
+                        <a asp-controller="Contratos" asp-action="Create" class="btn btn-sm btn-success">
+                            ➕ Crear Contrato
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-action="BuscarLibres" class="btn btn-secondary">🔄 Nueva Búsqueda</a>
+<a asp-action="Index" class="btn btn-outline-primary">Volver a Contratos</a>

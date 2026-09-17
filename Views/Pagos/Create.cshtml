@@ -1,0 +1,70 @@
+@model Inmobiliaria.Models.Pago
+
+@{
+    ViewData["Title"] = "Cargar Pago";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">💰 Cargar Nuevo Pago</h2>
+                </div>
+                <div class="card-body">
+                    @if (Model?.Contrato != null)
+                    {
+                        <div class="alert alert-info">
+                            <strong>Contrato #@Model.ContratoId</strong><br>
+                            <small>
+                                @Model.Contrato.FechaInicio.ToString("dd/MM/yyyy") -
+                                @Model.Contrato.FechaFin.ToString("dd/MM/yyyy") |
+                                Monto: $@Model.Contrato.Monto.ToString("0.00")
+                            </small>
+                        </div>
+                    }
+
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <input type="hidden" asp-for="ContratoId" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="FechaPago" class="form-label fw-bold">📅 Fecha de Pago *</label>
+                            <input asp-for="FechaPago" type="date" class="form-control" required />
+                            <span asp-validation-for="FechaPago" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Importe" class="form-label fw-bold">💵 Importe *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Importe" type="number" step="0.01" min="1" class="form-control" required />
+                            </div>
+                            <span asp-validation-for="Importe" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Concepto" class="form-label fw-bold">📝 Concepto *</label>
+                            <input asp-for="Concepto" class="form-control" placeholder="Ej: Mes de Enero 2025" required />
+                            <span asp-validation-for="Concepto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save"></i> Guardar Pago
+                            </button>
+                            <a asp-action="Index" asp-route-contratoId="@Model?.ContratoId" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

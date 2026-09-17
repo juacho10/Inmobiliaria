@@ -1,0 +1,74 @@
+@model Inmobiliaria.Models.Contrato
+
+@{
+    ViewData["Title"] = "Terminar Contrato Anticipadamente";
+    var multaSugerida = (decimal)ViewBag.MultaSugerida;
+    var duracionTotal = (int)ViewBag.DuracionTotal;
+    var transcurrido = (int)ViewBag.Transcurrido;
+    var restante = (int)ViewBag.Restante;
+    var porcentaje = transcurrido < duracionTotal / 2 ? "50%" : "25%";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h2 class="card-title mb-0">⚠️ Terminar Contrato #@Model.Id Anticipadamente</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Cálculo de Multa</h5>
+                        <ul class="mb-0">
+                            <li>Duración total del contrato: <strong>@duracionTotal días</strong></li>
+                            <li>Días transcurridos: <strong>@transcurrido días</strong></li>
+                            <li>Días restantes: <strong>@restante días</strong></li>
+                            <li>Porcentaje a pagar: <strong>@porcentaje</strong></li>
+                            <li>Multa sugerida: <strong class="text-danger">$@multaSugerida.ToString("0.00")</strong></li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="Terminar" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">📅 Fecha de Terminación *</label>
+                                <input type="date" name="fechaTerminacion" class="form-control" 
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                       min="@Model.FechaInicio.ToString("yyyy-MM-dd")"
+                                       max="@Model.FechaFin.ToString("yyyy-MM-dd")" required />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">💵 Monto de la Multa *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="multa" step="0.01" min="0" 
+                                           value="@multaSugerida.ToString("0.00")" class="form-control" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="pagada" value="true" id="pagada" class="form-check-input" required />
+                            <label for="pagada" class="form-check-label fw-bold text-danger">
+                                Confirmo que el inquilino pagó la multa (se registrará como pago)
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-stop-circle"></i> Terminar Contrato
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

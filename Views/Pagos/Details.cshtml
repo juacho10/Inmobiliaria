@@ -1,0 +1,96 @@
+@model Inmobiliaria.Models.Pago
+
+@{
+    ViewData["Title"] = "Detalles del Pago";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">💰 Detalles del Pago #@Model.Id</h2>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Número:</dt>
+                        <dd class="col-sm-8">@Model.NumeroPago</dd>
+
+                        <dt class="col-sm-4">Contrato:</dt>
+                        <dd class="col-sm-8">#@Model.ContratoId</dd>
+
+                        <dt class="col-sm-4">Fecha de Pago:</dt>
+                        <dd class="col-sm-8">@Model.FechaPago.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Concepto:</dt>
+                        <dd class="col-sm-8">@Model.Concepto</dd>
+
+                        <dt class="col-sm-4">Importe:</dt>
+                        <dd class="col-sm-8">$@Model.Importe.ToString("0.00")</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Anulado)
+                            {
+                                <span class="badge bg-danger">Anulado</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Activo</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Fecha Creación:</dt>
+                        <dd class="col-sm-8">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+                    </dl>
+
+                    <!-- AUDITORÍA (solo administradores) -->
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <hr>
+                        <h5>👥 Información de Auditoría</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Creado por:</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.UsuarioCreacion != null)
+                                {
+                                    @($"{Model.UsuarioCreacion.NombreCompleto} ({Model.UsuarioCreacion.Email})")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No disponible</span>
+                                }
+                            </dd>
+
+                            @if (Model.Anulado && Model.UsuarioAnulacionId.HasValue)
+                            {
+                                <dt class="col-sm-4">Anulado por:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.UsuarioAnulacion != null)
+                                    {
+                                        @($"{Model.UsuarioAnulacion.NombreCompleto} ({Model.UsuarioAnulacion.Email})")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No disponible</span>
+                                    }
+                                </dd>
+                            }
+                        </dl>
+                    }
+                </div>
+                <div class="card-footer">
+                    <a asp-action="Index" asp-route-contratoId="@Model.ContratoId" class="btn btn-secondary">📋 Volver al Listado</a>
+                    @if (!Model.Anulado)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">✏️ Editar Concepto</a>
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <a asp-action="Anular" asp-route-id="@Model.Id" class="btn btn-danger">🚫 Anular Pago</a>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

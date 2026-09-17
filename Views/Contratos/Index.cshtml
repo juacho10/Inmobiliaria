@@ -6,6 +6,11 @@
 
 <h1>📄 Contratos de Alquiler</h1>
 
+@if (ViewBag.TituloEspecial != null)
+{
+    <div class="alert alert-info">@ViewBag.TituloEspecial</div>
+}
+
 <p>
     <a asp-action="Create" class="btn btn-primary">➕ Crear Nuevo Contrato</a>
 </p>

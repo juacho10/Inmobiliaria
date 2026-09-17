@@ -6,12 +6,21 @@
 
 <h1>🏠 Inmuebles</h1>
 
+@if (ViewBag.TituloEspecial != null)
+{
+    <div class="alert alert-info">
+        <i class="fas fa-user-tie"></i> @ViewBag.TituloEspecial
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-2">Ver todos los inmuebles</a>
+    </div>
+}
+
 <p>
     <a asp-action="Create" class="btn btn-primary">➕ Crear Nuevo Inmueble</a>
 </p>
 
 <!-- Filtros de búsqueda -->
 <form method="get" class="mb-4">
+    <input type="hidden" name="propietarioId" value="@ViewBag.PropietarioId" />
     <div class="row">
         <div class="col-md-6">
             <div class="input-group">
@@ -107,7 +116,7 @@ else
                 @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
                 {
                     <li class="page-item @(i == ViewBag.PaginaActual ? "active" : "")">
-                        <a class="page-link" href="@Url.Action("Index", new { pagina = i, search = ViewBag.Search, disponible = ViewBag.Disponible })">@i</a>
+                        <a class="page-link" href="@Url.Action("Index", new { pagina = i, search = ViewBag.Search, disponible = ViewBag.Disponible, propietarioId = ViewBag.PropietarioId })">@i</a>
                     </li>
                 }
             </ul>

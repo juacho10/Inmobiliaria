@@ -1,0 +1,49 @@
+@model Inmobiliaria.Models.Pago
+
+@{
+    ViewData["Title"] = "Anular Pago";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="card-title mb-0">🚫 Anular Pago #@Model.Id</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle"></i> ¡Atención!</h5>
+                        <p class="mb-0">El pago NO se eliminará, pero quedará marcado como <strong>ANULADO</strong> y no contará en los totales.</p>
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Contrato:</dt>
+                        <dd class="col-sm-8">#@Model.ContratoId</dd>
+
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.FechaPago.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Concepto:</dt>
+                        <dd class="col-sm-8">@Model.Concepto</dd>
+
+                        <dt class="col-sm-4">Importe:</dt>
+                        <dd class="col-sm-8">$@Model.Importe.ToString("0.00")</dd>
+                    </dl>
+
+                    <form asp-action="Anular" asp-route-id="@Model.Id" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-ban"></i> Confirmar Anulación
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
