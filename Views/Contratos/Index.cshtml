@@ -8,7 +8,10 @@
 
 @if (ViewBag.TituloEspecial != null)
 {
-    <div class="alert alert-info">@ViewBag.TituloEspecial</div>
+    <div class="alert alert-info">
+        <i class="fas fa-filter"></i> @ViewBag.TituloEspecial
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-2">Ver todos</a>
+    </div>
 }
 
 <p>

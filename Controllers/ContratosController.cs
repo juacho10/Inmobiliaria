@@ -285,7 +285,6 @@ namespace Inmobiliaria.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Renovar(Contrato contrato)
         {
-            // Validar superposición
             var contratosExistentes = await _repository.FindAsync(c =>
                 c.InmuebleId == contrato.InmuebleId &&
                 c.Vigente &&
@@ -425,7 +424,6 @@ namespace Inmobiliaria.Controllers
                 usuario = (await _usuarioRepo.FindAsync(u => u.Email == usuarioEmail)).FirstOrDefault();
             }
 
-            // Terminar contrato
             contrato.FechaTerminacionAnticipada = fechaTerminacion;
             contrato.Multa = multa;
             contrato.Vigente = false;
@@ -435,7 +433,6 @@ namespace Inmobiliaria.Controllers
             _repository.Update(contrato);
             await _repository.SaveAsync();
 
-            // Registrar pago de la multa
             var pagosExistentes = await _pagoRepo.FindAsync(p => p.ContratoId == id);
             var nuevoPago = new Pago
             {
