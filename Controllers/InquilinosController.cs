@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -8,84 +9,96 @@ using Inmobiliaria.Repository;
 
 namespace Inmobiliaria.Controllers
 {
-    [Authorize(Policy = "SoloPropietarios")] // ✅ POLÍTICA ESPECÍFICA
+    [Authorize(Policy = "SoloPropietarios")]
     public class InquilinosController : Controller
     {
         private readonly IRepository<Inquilino> _repository;
+        private const int PageSize = 10;
 
         public InquilinosController(IRepository<Inquilino> repository)
         {
             _repository = repository;
         }
 
-        // GET: Inquilinos con paginación y búsqueda
         public async Task<IActionResult> Index(int pagina = 1, string search = "")
         {
-            int elementosPorPagina = 10;
-            var inquilinos = await _repository.GetAllAsync();
+            Expression<Func<Inquilino, bool>>? filtro = null;
 
-            // Filtrar si hay búsqueda
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                inquilinos = inquilinos.Where(i =>
-                    i.Nombre.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    i.Apellido.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    i.Dni.Contains(search, StringComparison.OrdinalIgnoreCase));
+                var s = search.Trim().ToLower();
+                filtro = i => i.Nombre.ToLower().Contains(s)
+                           || i.Apellido.ToLower().Contains(s)
+                           || i.Dni.Contains(s)
+                           || i.Email.ToLower().Contains(s);
             }
 
-            // Paginación
-            var totalElementos = inquilinos.Count();
-            var totalPaginas = (int)Math.Ceiling(totalElementos / (double)elementosPorPagina);
-            var inquilinosPagina = inquilinos.Skip((pagina - 1) * elementosPorPagina).Take(elementosPorPagina);
+            var (items, total) = await _repository.GetPagedAsync(
+                pagina,
+                PageSize,
+                filtro,
+                q => q.OrderBy(i => i.Apellido).ThenBy(i => i.Nombre));
 
             ViewBag.PaginaActual = pagina;
-            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)PageSize);
+            ViewBag.TotalRegistros = total;
             ViewBag.Search = search;
 
-            return View(inquilinosPagina);
+            return View(items);
         }
 
-        // GET: Inquilinos/Details/5
+        // ✅ Endpoint JSON para Select2
+        [HttpGet]
+        public async Task<IActionResult> Buscar(string term = "", int page = 1)
+        {
+            const int pageSize = 20;
+
+            var (items, total) = await _repository.SearchAsync(
+                term,
+                page,
+                pageSize,
+                extraFilter: i => i.Activo,
+                orderBy: q => q.OrderBy(i => i.Apellido).ThenBy(i => i.Nombre),
+                searchFields: new Expression<Func<Inquilino, string>>[]
+                {
+                    i => i.Nombre,
+                    i => i.Apellido,
+                    i => i.Dni,
+                    i => i.Email
+                });
+
+            return Json(new
+            {
+                results = items.Select(i => new
+                {
+                    id = i.Id,
+                    text = $"{i.Apellido}, {i.Nombre} - DNI {i.Dni}"
+                }),
+                pagination = new { more = page * pageSize < total }
+            });
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
+            if (id == null) return NotFound();
             var inquilino = await _repository.GetByIdAsync(id.Value);
-            if (inquilino == null)
-            {
-                return NotFound();
-            }
-
+            if (inquilino == null) return NotFound();
             return View(inquilino);
         }
 
-        // GET: Inquilinos/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
-        // POST: Inquilinos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Inquilino inquilino)
         {
-            // Validar que no exista otro inquilino con el mismo DNI
             var existeDni = await _repository.FindAsync(x => x.Dni == inquilino.Dni);
             if (existeDni.Any())
-            {
                 ModelState.AddModelError("Dni", "Ya existe un inquilino con este DNI");
-            }
 
-            // Validar que no exista otro inquilino con el mismo Email
             var existeEmail = await _repository.FindAsync(x => x.Email == inquilino.Email);
             if (existeEmail.Any())
-            {
                 ModelState.AddModelError("Email", "Ya existe un inquilino con este Email");
-            }
 
             if (ModelState.IsValid)
             {
@@ -96,45 +109,27 @@ namespace Inmobiliaria.Controllers
             return View(inquilino);
         }
 
-        // GET: Inquilinos/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
+            if (id == null) return NotFound();
             var inquilino = await _repository.GetByIdAsync(id.Value);
-            if (inquilino == null)
-            {
-                return NotFound();
-            }
+            if (inquilino == null) return NotFound();
             return View(inquilino);
         }
 
-        // POST: Inquilinos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Inquilino inquilino)
         {
-            if (id != inquilino.Id)
-            {
-                return NotFound();
-            }
+            if (id != inquilino.Id) return NotFound();
 
-            // Validar que no exista otro inquilino con el mismo DNI (excluyendo el actual)
             var existeDni = await _repository.FindAsync(x => x.Dni == inquilino.Dni && x.Id != inquilino.Id);
             if (existeDni.Any())
-            {
                 ModelState.AddModelError("Dni", "Ya existe un inquilino con este DNI");
-            }
 
-            // Validar que no exista otro inquilino con el mismo Email (excluyendo el actual)
             var existeEmail = await _repository.FindAsync(x => x.Email == inquilino.Email && x.Id != inquilino.Id);
             if (existeEmail.Any())
-            {
                 ModelState.AddModelError("Email", "Ya existe un inquilino con este Email");
-            }
 
             if (ModelState.IsValid)
             {
@@ -146,28 +141,18 @@ namespace Inmobiliaria.Controllers
             return View(inquilino);
         }
 
-        // GET: Inquilinos/Delete/5
-        [Authorize(Policy = "Administrador")] // ✅ SOLO ADMINISTRADORES
+        [Authorize(Policy = "Administrador")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
+            if (id == null) return NotFound();
             var inquilino = await _repository.GetByIdAsync(id.Value);
-            if (inquilino == null)
-            {
-                return NotFound();
-            }
-
+            if (inquilino == null) return NotFound();
             return View(inquilino);
         }
 
-        // POST: Inquilinos/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "Administrador")] // ✅ SOLO ADMINISTRADORES
+        [Authorize(Policy = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var inquilino = await _repository.GetByIdAsync(id);

@@ -1,7 +1,7 @@
 @model Inmobiliaria.Models.Inmueble
 
 @{
-    ViewData["Title"] = ViewData["Title"] = "Crear Inmueble";
+    ViewData["Title"] = "Crear Inmueble";
 }
 
 <h1>🏠 Crear Nuevo Inmueble</h1>
@@ -11,7 +11,7 @@
     <div class="col-md-8">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group mb-3">
@@ -23,8 +23,13 @@
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label asp-for="PropietarioId" class="form-label">Propietario *</label>
-                        <select asp-for="PropietarioId" class="form-select" asp-items="@(new SelectList(ViewBag.Propietarios, "Id", "NombreCompleto"))">
-                            <option value="">Seleccionar Propietario</option>
+                        <select asp-for="PropietarioId" class="form-select" id="propietarioSelect">
+                            @if (Model?.Propietario != null)
+                            {
+                                <option value="@Model.Propietario.Id" selected>
+                                    @Model.Propietario.NombreCompleto - DNI @Model.Propietario.Dni
+                                </option>
+                            }
                         </select>
                         <span asp-validation-for="PropietarioId" class="text-danger"></span>
                     </div>
@@ -98,7 +103,7 @@
             </div>
         </form>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-info text-white">
@@ -114,10 +119,6 @@
                     <li>Ambientes</li>
                     <li>Precio</li>
                 </ul>
-                <hr>
-                <p class="small text-muted">
-                    <strong>Nota:</strong> Los inmuebles marcados como no disponibles no aparecerán en las búsquedas para nuevos contratos.
-                </p>
             </div>
         </div>
     </div>
@@ -125,4 +126,13 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(function () {
+            initSelect2(
+                '#propietarioSelect',
+                '@Url.Action("BuscarPropietarios", "Inmuebles")',
+                'Buscar propietario por nombre o DNI...'
+            );
+        });
+    </script>
 }

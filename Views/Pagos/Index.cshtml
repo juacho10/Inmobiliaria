@@ -51,6 +51,11 @@
     </div>
 </form>
 
+@if (ViewBag.TotalRegistros != null)
+{
+    <p class="text-muted small">Total: @ViewBag.TotalRegistros registros</p>
+}
+
 @if (!Model.Any())
 {
     <div class="alert alert-info"><strong>No se encontraron pagos.</strong></div>

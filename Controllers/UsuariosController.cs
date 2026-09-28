@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -12,38 +13,39 @@ namespace Inmobiliaria.Controllers
     public class UsuariosController : Controller
     {
         private readonly IRepository<Usuario> _repository;
+        private const int PageSize = 10;
 
         public UsuariosController(IRepository<Usuario> repository)
         {
             _repository = repository;
         }
 
-        // GET: Usuarios
         public async Task<IActionResult> Index(int pagina = 1, string search = "")
         {
-            int elementosPorPagina = 10;
-            var usuarios = await _repository.GetAllAsync();
+            Expression<Func<Usuario, bool>>? filtro = null;
 
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                usuarios = usuarios.Where(u =>
-                    u.Nombre.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    u.Apellido.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    u.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
+                var s = search.Trim().ToLower();
+                filtro = u => u.Nombre.ToLower().Contains(s)
+                           || u.Apellido.ToLower().Contains(s)
+                           || u.Email.ToLower().Contains(s);
             }
 
-            var totalElementos = usuarios.Count();
-            var totalPaginas = (int)Math.Ceiling(totalElementos / (double)elementosPorPagina);
-            var usuariosPagina = usuarios.Skip((pagina - 1) * elementosPorPagina).Take(elementosPorPagina);
+            var (items, total) = await _repository.GetPagedAsync(
+                pagina,
+                PageSize,
+                filtro,
+                q => q.OrderBy(u => u.Apellido).ThenBy(u => u.Nombre));
 
             ViewBag.PaginaActual = pagina;
-            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)PageSize);
+            ViewBag.TotalRegistros = total;
             ViewBag.Search = search;
 
-            return View(usuariosPagina);
+            return View(items);
         }
 
-        // GET: Usuarios/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -52,24 +54,18 @@ namespace Inmobiliaria.Controllers
             return View(usuario);
         }
 
-        // GET: Usuarios/Create
         public IActionResult Create() => View();
 
-        // POST: Usuarios/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Usuario usuario, string password)
         {
             if (string.IsNullOrEmpty(password) || password.Length < 6)
-            {
                 ModelState.AddModelError("Password", "La contraseña debe tener al menos 6 caracteres.");
-            }
 
             var existeEmail = await _repository.FindAsync(u => u.Email == usuario.Email);
             if (existeEmail.Any())
-            {
                 ModelState.AddModelError("Email", "Ya existe un usuario con este email.");
-            }
 
             if (ModelState.IsValid)
             {
@@ -84,7 +80,6 @@ namespace Inmobiliaria.Controllers
             return View(usuario);
         }
 
-        // GET: Usuarios/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -93,7 +88,6 @@ namespace Inmobiliaria.Controllers
             return View(usuario);
         }
 
-        // POST: Usuarios/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Usuario usuario, string? nuevaPassword)
@@ -102,9 +96,7 @@ namespace Inmobiliaria.Controllers
 
             var existeEmail = await _repository.FindAsync(u => u.Email == usuario.Email && u.Id != usuario.Id);
             if (existeEmail.Any())
-            {
                 ModelState.AddModelError("Email", "Ya existe un usuario con este email.");
-            }
 
             if (ModelState.IsValid)
             {
@@ -137,14 +129,12 @@ namespace Inmobiliaria.Controllers
             return View(usuario);
         }
 
-        // GET: Usuarios/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
             var usuario = await _repository.GetByIdAsync(id.Value);
             if (usuario == null) return NotFound();
 
-            // No permitir eliminarse a sí mismo
             var usuarioEmail = User?.Identity?.Name;
             if (usuario.Email == usuarioEmail)
             {
@@ -155,7 +145,6 @@ namespace Inmobiliaria.Controllers
             return View(usuario);
         }
 
-        // POST: Usuarios/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

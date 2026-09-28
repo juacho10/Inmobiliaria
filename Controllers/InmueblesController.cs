@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Inmobiliaria.Helpers;
 using Inmobiliaria.Models;
 using Inmobiliaria.Repository;
 
@@ -13,6 +15,7 @@ namespace Inmobiliaria.Controllers
     {
         private readonly IRepository<Inmueble> _repository;
         private readonly IRepository<Propietario> _propietarioRepo;
+        private const int PageSize = 10;
 
         public InmueblesController(IRepository<Inmueble> repository, IRepository<Propietario> propietarioRepo)
         {
@@ -20,93 +23,100 @@ namespace Inmobiliaria.Controllers
             _propietarioRepo = propietarioRepo;
         }
 
-        // GET: Inmuebles con paginación, búsqueda y filtro por propietario
+        // GET: Inmuebles
         public async Task<IActionResult> Index(int pagina = 1, string search = "", bool? disponible = null, int? propietarioId = null)
         {
-            int elementosPorPagina = 10;
-            var inmuebles = await _repository.GetAllAsync();
+            Expression<Func<Inmueble, bool>>? filtro = null;
 
-            // Cargar datos relacionados
-            foreach (var inmueble in inmuebles)
-            {
-                if (inmueble.PropietarioId > 0)
-                {
-                    inmueble.Propietario = await _propietarioRepo.GetByIdAsync(inmueble.PropietarioId);
-                }
-            }
-
-            // Filtrar por propietario
             if (propietarioId.HasValue)
             {
-                inmuebles = inmuebles.Where(i => i.PropietarioId == propietarioId.Value);
-                ViewBag.PropietarioId = propietarioId;
+                Expression<Func<Inmueble, bool>> f1 = i => i.PropietarioId == propietarioId.Value;
+                filtro = filtro == null ? f1 : filtro.And(f1);
 
                 var prop = await _propietarioRepo.GetByIdAsync(propietarioId.Value);
                 if (prop != null)
-                {
                     ViewBag.TituloEspecial = $"Inmuebles de: {prop.NombreCompleto}";
-                }
             }
 
-            // Filtrar por búsqueda
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                inmuebles = inmuebles.Where(i =>
-                    i.Direccion.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    i.Tipo.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    (i.Propietario != null && i.Propietario.NombreCompleto.Contains(search, StringComparison.OrdinalIgnoreCase)));
+                var s = search.Trim().ToLower();
+                Expression<Func<Inmueble, bool>> f2 = i =>
+                    i.Direccion.ToLower().Contains(s) ||
+                    i.Tipo.ToLower().Contains(s);
+                filtro = filtro == null ? f2 : filtro.And(f2);
             }
 
-            // Filtrar por disponibilidad
             if (disponible.HasValue)
             {
-                inmuebles = inmuebles.Where(i => i.Disponible == disponible.Value);
+                Expression<Func<Inmueble, bool>> f3 = i => i.Disponible == disponible.Value;
+                filtro = filtro == null ? f3 : filtro.And(f3);
             }
 
-            // Paginación
-            var totalElementos = inmuebles.Count();
-            var totalPaginas = (int)Math.Ceiling(totalElementos / (double)elementosPorPagina);
-            var inmueblesPagina = inmuebles.Skip((pagina - 1) * elementosPorPagina).Take(elementosPorPagina);
+            var (items, total) = await _repository.GetPagedAsync(
+                pagina,
+                PageSize,
+                filtro,
+                q => q.OrderBy(i => i.Direccion),
+                i => i.Propietario!);
 
             ViewBag.PaginaActual = pagina;
-            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)PageSize);
+            ViewBag.TotalRegistros = total;
             ViewBag.Search = search;
             ViewBag.Disponible = disponible;
+            ViewBag.PropietarioId = propietarioId;
 
-            return View(inmueblesPagina);
+            return View(items);
+        }
+
+        // ✅ Endpoint JSON para Select2 (en Create/Edit)
+        [HttpGet]
+        public async Task<IActionResult> BuscarPropietarios(string term = "", int page = 1)
+        {
+            const int pageSize = 20;
+
+            var (items, total) = await _propietarioRepo.SearchAsync(
+                term,
+                page,
+                pageSize,
+                extraFilter: p => p.Activo,
+                orderBy: q => q.OrderBy(p => p.Apellido).ThenBy(p => p.Nombre),
+                searchFields: new Expression<Func<Propietario, string>>[]
+                {
+                    p => p.Nombre,
+                    p => p.Apellido,
+                    p => p.Dni,
+                    p => p.Email
+                });
+
+            return Json(new
+            {
+                results = items.Select(p => new
+                {
+                    id = p.Id,
+                    text = $"{p.Apellido}, {p.Nombre} - DNI {p.Dni}"
+                }),
+                pagination = new { more = page * pageSize < total }
+            });
         }
 
         // GET: Inmuebles/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var inmueble = await _repository.GetByIdAsync(id.Value);
-            if (inmueble == null)
-            {
-                return NotFound();
-            }
+            if (inmueble == null) return NotFound();
 
-            // Cargar propietario
             if (inmueble.PropietarioId > 0)
-            {
                 inmueble.Propietario = await _propietarioRepo.GetByIdAsync(inmueble.PropietarioId);
-            }
 
             return View(inmueble);
         }
 
         // GET: Inmuebles/Create
-        public async Task<IActionResult> Create()
-        {
-            // Cargar lista de propietarios para el dropdown
-            var propietarios = await _propietarioRepo.GetAllAsync();
-            ViewBag.Propietarios = propietarios.Where(p => p.Activo).ToList();
-            return View();
-        }
+        public IActionResult Create() => View();
 
         // POST: Inmuebles/Create
         [HttpPost]
@@ -120,30 +130,20 @@ namespace Inmobiliaria.Controllers
                 TempData["SuccessMessage"] = "Inmueble creado exitosamente.";
                 return RedirectToAction(nameof(Index));
             }
-
-            // Recargar propietarios si hay error
-            var propietarios = await _propietarioRepo.GetAllAsync();
-            ViewBag.Propietarios = propietarios.Where(p => p.Activo).ToList();
             return View(inmueble);
         }
 
         // GET: Inmuebles/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var inmueble = await _repository.GetByIdAsync(id.Value);
-            if (inmueble == null)
-            {
-                return NotFound();
-            }
+            if (inmueble == null) return NotFound();
 
-            // Cargar lista de propietarios
-            var propietarios = await _propietarioRepo.GetAllAsync();
-            ViewBag.Propietarios = propietarios.Where(p => p.Activo).ToList();
+            // Cargar propietario actual para mostrar en el select
+            if (inmueble.PropietarioId > 0)
+                inmueble.Propietario = await _propietarioRepo.GetByIdAsync(inmueble.PropietarioId);
 
             return View(inmueble);
         }
@@ -153,10 +153,7 @@ namespace Inmobiliaria.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Inmueble inmueble)
         {
-            if (id != inmueble.Id)
-            {
-                return NotFound();
-            }
+            if (id != inmueble.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -167,9 +164,10 @@ namespace Inmobiliaria.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Recargar propietarios si hay error
-            var propietarios = await _propietarioRepo.GetAllAsync();
-            ViewBag.Propietarios = propietarios.Where(p => p.Activo).ToList();
+            // Recargar propietario actual si hay error
+            if (inmueble.PropietarioId > 0)
+                inmueble.Propietario = await _propietarioRepo.GetByIdAsync(inmueble.PropietarioId);
+
             return View(inmueble);
         }
 
@@ -177,35 +175,22 @@ namespace Inmobiliaria.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var inmueble = await _repository.GetByIdAsync(id.Value);
-            if (inmueble == null)
-            {
-                return NotFound();
-            }
+            if (inmueble == null) return NotFound();
 
-            // Cargar propietario
             if (inmueble.PropietarioId > 0)
-            {
                 inmueble.Propietario = await _propietarioRepo.GetByIdAsync(inmueble.PropietarioId);
-            }
 
-            // Verificar si tiene contratos activos
             var contratosRepo = HttpContext.RequestServices.GetService<IRepository<Contrato>>();
             var contratosActivos = Enumerable.Empty<Contrato>();
             var contratosHistoricos = Enumerable.Empty<Contrato>();
 
             if (contratosRepo != null)
             {
-                contratosActivos = await contratosRepo.FindAsync(c =>
-                    c.InmuebleId == id.Value && c.Vigente);
-
-                contratosHistoricos = await contratosRepo.FindAsync(c =>
-                    c.InmuebleId == id.Value && !c.Vigente);
+                contratosActivos = await contratosRepo.FindAsync(c => c.InmuebleId == id.Value && c.Vigente);
+                contratosHistoricos = await contratosRepo.FindAsync(c => c.InmuebleId == id.Value && !c.Vigente);
             }
 
             ViewBag.TieneContratosActivos = contratosActivos.Any();

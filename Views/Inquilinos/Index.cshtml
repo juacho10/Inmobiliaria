@@ -18,6 +18,11 @@
     </div>
 </form>
 
+@if (ViewBag.TotalRegistros != null)
+{
+    <p class="text-muted small">Total: @ViewBag.TotalRegistros registros</p>
+}
+
 <table class="table table-striped">
     <thead class="table-dark">
         <tr>

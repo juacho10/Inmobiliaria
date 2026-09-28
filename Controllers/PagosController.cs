@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Inmobiliaria.Helpers;
 using Inmobiliaria.Models;
 using Inmobiliaria.Repository;
 
@@ -14,6 +16,7 @@ namespace Inmobiliaria.Controllers
         private readonly IRepository<Pago> _repository;
         private readonly IRepository<Contrato> _contratoRepo;
         private readonly IRepository<Usuario> _usuarioRepo;
+        private const int PageSize = 10;
 
         public PagosController(
             IRepository<Pago> repository,
@@ -25,55 +28,46 @@ namespace Inmobiliaria.Controllers
             _usuarioRepo = usuarioRepo;
         }
 
-        // GET: Pagos?contratoId=X
+        // GET: Pagos
         public async Task<IActionResult> Index(int pagina = 1, int? contratoId = null, string search = "", bool? anulado = null)
         {
-            int elementosPorPagina = 10;
-            var pagos = await _repository.GetAllAsync();
+            Expression<Func<Pago, bool>>? filtro = null;
 
-            // Cargar contratos y usuarios relacionados
-            foreach (var pago in pagos)
-            {
-                if (pago.ContratoId > 0)
-                    pago.Contrato = await _contratoRepo.GetByIdAsync(pago.ContratoId);
-                if (pago.UsuarioCreacionId > 0)
-                    pago.UsuarioCreacion = await _usuarioRepo.GetByIdAsync(pago.UsuarioCreacionId);
-                if (pago.UsuarioAnulacionId.HasValue && pago.UsuarioAnulacionId > 0)
-                    pago.UsuarioAnulacion = await _usuarioRepo.GetByIdAsync(pago.UsuarioAnulacionId.Value);
-            }
-
-            // Filtrar por contrato
             if (contratoId.HasValue)
             {
-                pagos = pagos.Where(p => p.ContratoId == contratoId.Value);
-                ViewBag.ContratoId = contratoId;
+                Expression<Func<Pago, bool>> f = p => p.ContratoId == contratoId.Value;
+                filtro = filtro == null ? f : filtro.And(f);
             }
 
-            // Filtrar por búsqueda (concepto)
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                pagos = pagos.Where(p => p.Concepto.Contains(search, StringComparison.OrdinalIgnoreCase));
+                var s = search.Trim().ToLower();
+                Expression<Func<Pago, bool>> f = p => p.Concepto.ToLower().Contains(s);
+                filtro = filtro == null ? f : filtro.And(f);
             }
 
-            // Filtrar por estado anulado
             if (anulado.HasValue)
             {
-                pagos = pagos.Where(p => p.Anulado == anulado.Value);
+                Expression<Func<Pago, bool>> f = p => p.Anulado == anulado.Value;
+                filtro = filtro == null ? f : filtro.And(f);
             }
 
-            // Paginación
-            var totalElementos = pagos.Count();
-            var totalPaginas = (int)Math.Ceiling(totalElementos / (double)elementosPorPagina);
-            var pagosPagina = pagos.OrderByDescending(p => p.FechaPago)
-                                   .Skip((pagina - 1) * elementosPorPagina)
-                                   .Take(elementosPorPagina);
+            var (items, total) = await _repository.GetPagedAsync(
+                pagina,
+                PageSize,
+                filtro,
+                q => q.OrderByDescending(p => p.FechaPago),
+                p => p.Contrato!,
+                p => p.UsuarioCreacion!);
 
             ViewBag.PaginaActual = pagina;
-            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)PageSize);
+            ViewBag.TotalRegistros = total;
             ViewBag.Search = search;
             ViewBag.Anulado = anulado;
+            ViewBag.ContratoId = contratoId;
 
-            return View(pagosPagina);
+            return View(items);
         }
 
         // GET: Pagos/Details/5
@@ -121,22 +115,17 @@ namespace Inmobiliaria.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Pago pago)
         {
-            // Validar que el contrato existe
             var contrato = await _contratoRepo.GetByIdAsync(pago.ContratoId);
             if (contrato == null)
-            {
                 ModelState.AddModelError("ContratoId", "El contrato seleccionado no existe.");
-            }
 
             if (ModelState.IsValid)
             {
-                // Asignar número de pago automáticamente
                 var pagosExistentes = await _repository.FindAsync(p => p.ContratoId == pago.ContratoId);
-                pago.NumeroPago = pagosExistentes.Any() 
-                    ? pagosExistentes.Max(p => p.NumeroPago) + 1 
+                pago.NumeroPago = pagosExistentes.Any()
+                    ? pagosExistentes.Max(p => p.NumeroPago) + 1
                     : 1;
 
-                // Asignar usuario de creación
                 var usuarioEmail = User?.Identity?.Name;
                 if (!string.IsNullOrEmpty(usuarioEmail))
                 {
@@ -151,12 +140,11 @@ namespace Inmobiliaria.Controllers
                 return RedirectToAction(nameof(Index), new { contratoId = pago.ContratoId });
             }
 
-            // Recargar contrato si hay error
             pago.Contrato = await _contratoRepo.GetByIdAsync(pago.ContratoId);
             return View(pago);
         }
 
-        // GET: Pagos/Edit/5 (solo permite editar el CONCEPTO)
+        // GET: Pagos/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -173,12 +161,11 @@ namespace Inmobiliaria.Controllers
         // POST: Pagos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, string concepto, string? fechaPago, string? importe)
+        public async Task<IActionResult> Edit(int id, string concepto)
         {
             var pago = await _repository.GetByIdAsync(id);
             if (pago == null) return NotFound();
 
-            // Solo actualizar el concepto (NO monto ni fecha)
             if (string.IsNullOrEmpty(concepto))
             {
                 ModelState.AddModelError("Concepto", "El concepto es obligatorio.");
@@ -225,7 +212,6 @@ namespace Inmobiliaria.Controllers
                 pago.Anulado = true;
                 pago.FechaModificacion = DateTime.Now;
 
-                // Asignar usuario que anuló
                 var usuarioEmail = User?.Identity?.Name;
                 if (!string.IsNullOrEmpty(usuarioEmail))
                 {
