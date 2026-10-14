@@ -9,7 +9,7 @@
 
 <div class="row">
     <div class="col-md-8">
-        <form asp-action="Create">
+        <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="row">
@@ -96,7 +96,19 @@
                 <input asp-for="Disponible" class="form-check-input" />
                 <label asp-for="Disponible" class="form-check-label">Disponible para alquiler</label>
             </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">🖼️ Imagen de Portada</label>
+                <input type="file" name="imagenPortada" class="form-control" accept="image/*" />
+                <div class="form-text">Se subirá a Cloudinary</div>
+            </div>
 
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">🖼️ Galería de Imágenes</label>
+                <input type="file" name="imagenesGaleria" class="form-control" accept="image/*" multiple />
+                <div class="form-text">Podés seleccionar varias imágenes</div>
+            </div>
+            
             <div class="form-group">
                 <button type="submit" class="btn btn-success">💾 Crear Inmueble</button>
                 <a asp-action="Index" class="btn btn-secondary">↩️ Cancelar</a>

@@ -304,6 +304,7 @@ wwwroot/avatars/*
 # Si querés ignorar tu appsettings.Development.json con datos locales
 # Descomentá la siguiente línea:
 # appsettings.Development.json
+# appsettings.Production.json
 
 # ============================================================
 # CUSTOM: BASE DE DATOS LOCAL

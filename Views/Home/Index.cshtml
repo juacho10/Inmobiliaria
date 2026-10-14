@@ -104,11 +104,11 @@
                 actualizarContador();
             }
 
-            // Simular datos (en una aplicación real estos vendrían del servidor)
-            animarContador(document.getElementById('contadorPropietarios'), 24);
-            animarContador(document.getElementById('contadorInquilinos'), 18);
-            animarContador(document.getElementById('contadorContratos'), 12);
-            animarContador(document.getElementById('contadorPagos'), 156);
+            
+            animarContador(document.getElementById('contadorPropietarios'), @ViewBag.TotalPropietarios);
+            animarContador(document.getElementById('contadorInquilinos'), @ViewBag.TotalInquilinos);
+            animarContador(document.getElementById('contadorContratos'), @ViewBag.TotalContratosVigentes);
+            animarContador(document.getElementById('contadorPagos'), @ViewBag.TotalPagos);
         });
     </script>
 }

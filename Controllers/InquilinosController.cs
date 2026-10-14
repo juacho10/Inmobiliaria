@@ -20,6 +20,13 @@ namespace Inmobiliaria.Controllers
             _repository = repository;
         }
 
+        // ==================== VISTA VUE.JS ====================
+        [HttpGet]
+        public IActionResult VueIndex()
+        {
+            return View();
+        }
+
         public async Task<IActionResult> Index(int pagina = 1, string search = "")
         {
             Expression<Func<Inquilino, bool>>? filtro = null;
@@ -162,6 +169,108 @@ namespace Inmobiliaria.Controllers
                 await _repository.SaveAsync();
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        // ==================== ENDPOINTS PARA VUE.JS (ABM AJAX) ====================
+
+        [HttpGet]
+        public async Task<IActionResult> GetInquilinos(int page = 1, int pageSize = 10, string search = "")
+        {
+            Expression<Func<Inquilino, bool>>? filtro = null;
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim().ToLower();
+                filtro = i => i.Nombre.ToLower().Contains(s)
+                           || i.Apellido.ToLower().Contains(s)
+                           || i.Dni.Contains(s)
+                           || i.Email.ToLower().Contains(s);
+            }
+
+            var (items, total) = await _repository.GetPagedAsync(
+                page, pageSize, filtro,
+                q => q.OrderBy(i => i.Apellido).ThenBy(i => i.Nombre));
+
+            return Json(new
+            {
+                items = items.Select(i => new
+                {
+                    i.Id,
+                    i.Dni,
+                    i.Nombre,
+                    i.Apellido,
+                    i.Telefono,
+                    i.Email,
+                    i.Activo
+                }),
+                total,
+                page,
+                pageSize,
+                totalPages = (int)Math.Ceiling(total / (double)pageSize)
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateAjax([FromBody] Inquilino inquilino)
+        {
+            if (inquilino == null) return BadRequest(new { message = "Datos inválidos" });
+
+            var existeDni = await _repository.FindAsync(x => x.Dni == inquilino.Dni);
+            if (existeDni.Any())
+                return BadRequest(new { message = "Ya existe un inquilino con este DNI" });
+
+            var existeEmail = await _repository.FindAsync(x => x.Email == inquilino.Email);
+            if (existeEmail.Any())
+                return BadRequest(new { message = "Ya existe un inquilino con este Email" });
+
+            await _repository.AddAsync(inquilino);
+            await _repository.SaveAsync();
+
+            return Json(new { success = true, id = inquilino.Id, message = "Inquilino creado exitosamente" });
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> EditAjax(int id, [FromBody] Inquilino inquilino)
+        {
+            if (inquilino == null) return BadRequest(new { message = "Datos inválidos" });
+            if (id != inquilino.Id) return BadRequest(new { message = "ID no coincide" });
+
+            var existeDni = await _repository.FindAsync(x => x.Dni == inquilino.Dni && x.Id != inquilino.Id);
+            if (existeDni.Any())
+                return BadRequest(new { message = "Ya existe un inquilino con este DNI" });
+
+            var existeEmail = await _repository.FindAsync(x => x.Email == inquilino.Email && x.Id != inquilino.Id);
+            if (existeEmail.Any())
+                return BadRequest(new { message = "Ya existe un inquilino con este Email" });
+
+            var entidad = await _repository.GetByIdAsync(id);
+            if (entidad == null) return NotFound(new { message = "No encontrado" });
+
+            entidad.Dni = inquilino.Dni;
+            entidad.Nombre = inquilino.Nombre;
+            entidad.Apellido = inquilino.Apellido;
+            entidad.Telefono = inquilino.Telefono;
+            entidad.Email = inquilino.Email;
+            entidad.Activo = inquilino.Activo;
+            entidad.FechaModificacion = DateTime.Now;
+
+            _repository.Update(entidad);
+            await _repository.SaveAsync();
+
+            return Json(new { success = true, message = "Inquilino actualizado exitosamente" });
+        }
+
+        [HttpDelete]
+        [Authorize(Policy = "Administrador")]
+        public async Task<IActionResult> DeleteAjax(int id)
+        {
+            var inquilino = await _repository.GetByIdAsync(id);
+            if (inquilino == null) return NotFound(new { message = "Inquilino no encontrado" });
+
+            _repository.Remove(inquilino);
+            await _repository.SaveAsync();
+
+            return Json(new { success = true, message = "Inquilino eliminado exitosamente" });
         }
     }
 }

@@ -46,7 +46,22 @@ namespace Inmobiliaria.Models
         [Display(Name = "Disponible")]
         public bool Disponible { get; set; } = true;
 
-        // Propiedad de navegación para Contratos
+        
+        [Display(Name = "Imagen de Portada")]
+        [StringLength(500)]
+        public string? ImagenPortada { get; set; }
+
+    
+        [Display(Name = "Galería de Imágenes")]
+        public string? Imagenes { get; set; }
+
+        // Navegación
         public virtual ICollection<Contrato> Contratos { get; set; } = new List<Contrato>();
+
+        [NotMapped]
+        public List<string> ImagenesLista =>
+            string.IsNullOrEmpty(Imagenes)
+                ? new List<string>()
+                : Imagenes.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Inmobiliaria.Helpers;
 using Inmobiliaria.Models;
 using Inmobiliaria.Repository;
+using Inmobiliaria.Services;
 
 namespace Inmobiliaria.Controllers
 {
@@ -120,19 +121,34 @@ namespace Inmobiliaria.Controllers
 
         // POST: Inmuebles/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Inmueble inmueble)
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(Inmueble inmueble, IFormFile? imagenPortada, List<IFormFile>? imagenesGaleria, [FromServices] CloudinaryService cloudinary)
+{
+    if (ModelState.IsValid)
+    {
+        if (imagenPortada != null && imagenPortada.Length > 0)
         {
-            if (ModelState.IsValid)
-            {
-                await _repository.AddAsync(inmueble);
-                await _repository.SaveAsync();
-                TempData["SuccessMessage"] = "Inmueble creado exitosamente.";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(inmueble);
+            inmueble.ImagenPortada = await cloudinary.SubirImagenAsync(imagenPortada, "inmobiliaria/inmuebles/portadas");
         }
 
+        if (imagenesGaleria != null && imagenesGaleria.Any())
+        {
+            var urls = new List<string>();
+            foreach (var img in imagenesGaleria)
+            {
+                var url = await cloudinary.SubirImagenAsync(img, "inmobiliaria/inmuebles/galeria");
+                if (!string.IsNullOrEmpty(url)) urls.Add(url);
+            }
+            inmueble.Imagenes = string.Join(",", urls);
+        }
+
+        await _repository.AddAsync(inmueble);
+        await _repository.SaveAsync();
+        TempData["SuccessMessage"] = "Inmueble creado exitosamente.";
+        return RedirectToAction(nameof(Index));
+    }
+    return View(inmueble);
+        }
         // GET: Inmuebles/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {

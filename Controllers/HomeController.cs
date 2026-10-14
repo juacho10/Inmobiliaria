@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Inmobiliaria.Models;
+using Inmobiliaria.Repository;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Inmobiliaria.Controllers;
@@ -8,31 +9,48 @@ namespace Inmobiliaria.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IRepository<Propietario> _propietarioRepo;
+    private readonly IRepository<Inquilino> _inquilinoRepo;
+    private readonly IRepository<Contrato> _contratoRepo;
+    private readonly IRepository<Pago> _pagoRepo;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(
+        ILogger<HomeController> logger,
+        IRepository<Propietario> propietarioRepo,
+        IRepository<Inquilino> inquilinoRepo,
+        IRepository<Contrato> contratoRepo,
+        IRepository<Pago> pagoRepo)
     {
         _logger = logger;
+        _propietarioRepo = propietarioRepo;
+        _inquilinoRepo = inquilinoRepo;
+        _contratoRepo = contratoRepo;
+        _pagoRepo = pagoRepo;
     }
 
-    [AllowAnonymous] // ✅ PERMITIR ACCESO SIN AUTENTICACIÓN
-    public IActionResult Index()
+    [AllowAnonymous]
+    public async Task<IActionResult> Index()
     {
+        ViewBag.TotalPropietarios = (await _propietarioRepo.GetAllAsync()).Count();
+        ViewBag.TotalInquilinos = (await _inquilinoRepo.GetAllAsync()).Count();
+        ViewBag.TotalContratosVigentes = (await _contratoRepo.FindAsync(c => c.Vigente)).Count();
+        ViewBag.TotalPagos = (await _pagoRepo.GetAllAsync()).Count();
         return View();
     }
 
-    [AllowAnonymous] // ✅ PERMITIR ACCESO SIN AUTENTICACIÓN
+    [AllowAnonymous]
     public IActionResult Privacy()
     {
         return View();
     }
 
-    [Authorize] // ✅ REQUIERE AUTENTICACIÓN
+    [Authorize]
     public IActionResult Autenticado()
     {
         return View();
     }
 
-    [Authorize(Policy = "Administrador")] // ✅ POLÍTICA ESPECÍFICA (Page 8 del PDF)
+    [Authorize(Policy = "Administrador")]
     public IActionResult SuperPrivado()
     {
         return View();

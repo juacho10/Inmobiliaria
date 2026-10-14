@@ -1,0 +1,257 @@
+@{
+    ViewData["Title"] = "Inquilinos (Vue.js)";
+}
+
+<div id="app" v-cloak>
+    @Html.AntiForgeryToken()
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>👥 Inquilinos <small class="text-muted fs-6">(Vue.js + AJAX)</small></h1>
+        <button class="btn btn-primary" @@click="abrirModalCrear">
+            ➕ Crear Nuevo
+        </button>
+    </div>
+
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" v-model="search"
+               @@keyup.enter="buscar" placeholder="Buscar por nombre, apellido, DNI o email...">
+        <button class="btn btn-outline-secondary" @@click="buscar">🔍 Buscar</button>
+        <button class="btn btn-outline-danger" @@click="limpiarBusqueda" v-if="search">✖ Limpiar</button>
+    </div>
+
+    <div v-if="mensaje" :class="'alert alert-' + tipoMensaje + ' alert-dismissible fade show'">
+        {{ mensaje }}
+        <button type="button" class="btn-close" @@click="mensaje = ''"></button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-if="cargando">
+                    <td colspan="6" class="text-center">Cargando...</td>
+                </tr>
+                <tr v-else-if="inquilinos.length === 0">
+                    <td colspan="6" class="text-center text-muted">No se encontraron inquilinos</td>
+                </tr>
+                <tr v-for="i in inquilinos" :key="i.id">
+                    <td>{{ i.dni }}</td>
+                    <td>{{ i.nombre }}</td>
+                    <td>{{ i.apellido }}</td>
+                    <td>{{ i.telefono }}</td>
+                    <td>{{ i.email }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" @@click="abrirModalEditar(i)">✏️</button>
+                        <button class="btn btn-sm btn-danger" @@click="eliminar(i)" v-if="esAdmin">🗑️</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav v-if="totalPages > 1">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" :class="{ disabled: page === 1 }">
+                <a class="page-link" href="#" @@click.prevent="cambiarPagina(page - 1)">Anterior</a>
+            </li>
+            <li class="page-item" v-for="p in totalPages" :key="p" :class="{ active: p === page }">
+                <a class="page-link" href="#" @@click.prevent="cambiarPagina(p)">{{ p }}</a>
+            </li>
+            <li class="page-item" :class="{ disabled: page === totalPages }">
+                <a class="page-link" href="#" @@click.prevent="cambiarPagina(page + 1)">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Modal -->
+    <div class="modal fade" :class="{ show: modalVisible }" :style="{ display: modalVisible ? 'block' : 'none' }" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">{{ editando ? 'Editar' : 'Crear' }} Inquilino</h5>
+                    <button type="button" class="btn-close btn-close-white" @@click="cerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div v-if="errores.length" class="alert alert-danger">
+                        <ul class="mb-0">
+                            <li v-for="e in errores" :key="e">{{ e }}</li>
+                        </ul>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">DNI *</label>
+                        <input v-model="form.dni" class="form-control" maxlength="10" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input v-model="form.nombre" class="form-control" maxlength="50" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Apellido *</label>
+                        <input v-model="form.apellido" class="form-control" maxlength="50" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono *</label>
+                        <input v-model="form.telefono" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input v-model="form.email" type="email" class="form-control" />
+                    </div>
+                    <div class="form-check" v-if="editando">
+                        <input v-model="form.activo" type="checkbox" class="form-check-input" id="activo" />
+                        <label class="form-check-label" for="activo">Activo</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @@click="cerrarModal">Cancelar</button>
+                    <button class="btn btn-success" @@click="guardar" :disabled="guardando">
+                        {{ guardando ? 'Guardando...' : 'Guardar' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show" v-if="modalVisible"></div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/vue@@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    inquilinos: [],
+                    page: 1,
+                    pageSize: 10,
+                    totalPages: 0,
+                    search: '',
+                    cargando: false,
+                    modalVisible: false,
+                    editando: false,
+                    guardando: false,
+                    mensaje: '',
+                    tipoMensaje: 'success',
+                    errores: [],
+                    form: { id: 0, dni: '', nombre: '', apellido: '', telefono: '', email: '', activo: true },
+                    esAdmin: @(User.IsInRole("Administrador") ? "true" : "false")
+                };
+            },
+            mounted() {
+                this.cargar();
+            },
+            methods: {
+                getToken() {
+                    return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                },
+                async cargar() {
+                    this.cargando = true;
+                    try {
+                        const url = `/Inquilinos/GetInquilinos?page=${this.page}&pageSize=${this.pageSize}&search=${encodeURIComponent(this.search)}`;
+                        const res = await fetch(url);
+                        if (!res.ok) throw new Error('Error al cargar');
+                        const data = await res.json();
+                        this.inquilinos = data.items;
+                        this.totalPages = data.totalPages;
+                    } catch (e) {
+                        this.mostrarMensaje('Error al cargar inquilinos', 'danger');
+                    } finally {
+                        this.cargando = false;
+                    }
+                },
+                buscar() {
+                    this.page = 1;
+                    this.cargar();
+                },
+                limpiarBusqueda() {
+                    this.search = '';
+                    this.buscar();
+                },
+                cambiarPagina(p) {
+                    if (p < 1 || p > this.totalPages) return;
+                    this.page = p;
+                    this.cargar();
+                },
+                abrirModalCrear() {
+                    this.editando = false;
+                    this.errores = [];
+                    this.form = { id: 0, dni: '', nombre: '', apellido: '', telefono: '', email: '', activo: true };
+                    this.modalVisible = true;
+                },
+                abrirModalEditar(i) {
+                    this.editando = true;
+                    this.errores = [];
+                    this.form = { ...i };
+                    this.modalVisible = true;
+                },
+                cerrarModal() {
+                    this.modalVisible = false;
+                },
+                async guardar() {
+                    this.errores = [];
+                    this.guardando = true;
+                    try {
+                        const token = this.getToken();
+                        const url = this.editando ? `/Inquilinos/EditAjax/${this.form.id}` : '/Inquilinos/CreateAjax';
+                        const method = this.editando ? 'PUT' : 'POST';
+                        const res = await fetch(url, {
+                            method,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': token
+                            },
+                            body: JSON.stringify(this.form)
+                        });
+                        if (!res.ok) {
+                            const err = await res.json();
+                            if (err.message) this.errores.push(err.message);
+                            else this.errores.push('Error al guardar');
+                            return;
+                        }
+                        const data = await res.json();
+                        this.mostrarMensaje(data.message, 'success');
+                        this.cerrarModal();
+                        this.cargar();
+                    } catch (e) {
+                        this.errores.push('Error de conexión');
+                    } finally {
+                        this.guardando = false;
+                    }
+                },
+                async eliminar(i) {
+                    if (!confirm(`¿Eliminar a ${i.apellido}, ${i.nombre}?`)) return;
+                    try {
+                        const token = this.getToken();
+                        const res = await fetch(`/Inquilinos/DeleteAjax/${i.id}`, {
+                            method: 'DELETE',
+                            headers: { 'RequestVerificationToken': token }
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Error');
+                        this.mostrarMensaje(data.message, 'success');
+                        this.cargar();
+                    } catch (e) {
+                        this.mostrarMensaje(e.message, 'danger');
+                    }
+                },
+                mostrarMensaje(msg, tipo) {
+                    this.mensaje = msg;
+                    this.tipoMensaje = tipo;
+                    setTimeout(() => this.mensaje = '', 4000);
+                }
+            }
+        }).mount('#app');
+    </script>
+    <style>
+        [v-cloak] { display: none; }
+    </style>
+}

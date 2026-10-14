@@ -1,0 +1,74 @@
+{
+  "info": {
+    "name": "Inmobiliaria API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://localhost:5001" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@inmobiliaria.com\",\n  \"password\": \"admin123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "if (data.token) { pm.collectionVariables.set('token', data.token); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Listar Inmuebles",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/inmueblesapi?page=1&pageSize=10"
+      }
+    },
+    {
+      "name": "Obtener Inmueble por ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/inmueblesapi/1"
+      }
+    },
+    {
+      "name": "Crear Inmueble (Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/inmueblesapi",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"direccion\": \"Av. Siempre Viva 742\",\n  \"tipo\": \"Casa\",\n  \"uso\": \"Residencial\",\n  \"ambientes\": 3,\n  \"precio\": 50000,\n  \"disponible\": true,\n  \"propietarioId\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "Eliminar Inmueble (Admin)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/inmueblesapi/1"
+      }
+    }
+  ]
+}

@@ -133,6 +133,13 @@ namespace Inmobiliaria.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("DATETIME");
 
+                    b.Property<string>("ImagenPortada")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Imagenes")
+                        .HasColumnType("longtext");
+
                     b.Property<decimal>("Precio")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");

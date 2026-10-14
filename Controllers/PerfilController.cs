@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Inmobiliaria.Models;
 using Inmobiliaria.Repository;
+using Inmobiliaria.Services;
 
 namespace Inmobiliaria.Controllers
 {
@@ -20,7 +21,6 @@ namespace Inmobiliaria.Controllers
             _repository = repository;
         }
 
-        // GET: Perfil
         public async Task<IActionResult> Index()
         {
             var email = User?.Identity?.Name;
@@ -33,7 +33,6 @@ namespace Inmobiliaria.Controllers
             return View(usuario);
         }
 
-        // GET: Perfil/Editar
         public async Task<IActionResult> Editar()
         {
             var email = User?.Identity?.Name;
@@ -43,7 +42,6 @@ namespace Inmobiliaria.Controllers
             return View(usuario);
         }
 
-        // POST: Perfil/Editar
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(string nombre, string apellido, string email)
@@ -71,10 +69,8 @@ namespace Inmobiliaria.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Perfil/CambiarPassword
         public IActionResult CambiarPassword() => View();
 
-        // POST: Perfil/CambiarPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CambiarPassword(string passwordActual, string passwordNueva, string passwordConfirmar)
@@ -117,10 +113,10 @@ namespace Inmobiliaria.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Perfil/CambiarAvatar
+        // ✅ CAMBIAR AVATAR CON CLOUDINARY
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CambiarAvatar(IFormFile archivo)
+        public async Task<IActionResult> CambiarAvatar(IFormFile archivo, [FromServices] CloudinaryService cloudinary)
         {
             if (archivo == null || archivo.Length == 0)
             {
@@ -133,37 +129,38 @@ namespace Inmobiliaria.Controllers
             var usuario = usuarios.FirstOrDefault();
             if (usuario == null) return NotFound();
 
-            // Validar extensión
             var extension = Path.GetExtension(archivo.FileName).ToLower();
-            var permitidas = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var permitidas = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
             if (!permitidas.Contains(extension))
             {
-                TempData["ErrorMessage"] = "Solo se permiten imágenes JPG, PNG o GIF.";
+                TempData["ErrorMessage"] = "Solo se permiten imágenes JPG, PNG, GIF o WEBP.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Guardar en wwwroot/avatars/
-            var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
-            if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
-
-            var nombreArchivo = $"{usuario.Id}_{Guid.NewGuid()}{extension}";
-            var rutaCompleta = Path.Combine(carpeta, nombreArchivo);
-
-            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+            try
             {
-                await archivo.CopyToAsync(stream);
+                var url = await cloudinary.SubirImagenAsync(archivo, "inmobiliaria/avatares");
+                if (string.IsNullOrEmpty(url))
+                {
+                    TempData["ErrorMessage"] = "No se pudo subir la imagen.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                usuario.Avatar = url;
+                usuario.FechaModificacion = DateTime.Now;
+                _repository.Update(usuario);
+                await _repository.SaveAsync();
+
+                TempData["SuccessMessage"] = "Foto de perfil actualizada en Cloudinary.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error al subir: {ex.Message}";
             }
 
-            usuario.Avatar = $"/avatars/{nombreArchivo}";
-            usuario.FechaModificacion = DateTime.Now;
-            _repository.Update(usuario);
-            await _repository.SaveAsync();
-
-            TempData["SuccessMessage"] = "Foto de perfil actualizada.";
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Perfil/QuitarAvatar
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> QuitarAvatar()
